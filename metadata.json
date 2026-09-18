@@ -1,0 +1,6 @@
+{
+  "name": "STUDY OS",
+  "description": "Academic Operating System with schedule management, exam countdown, task tracking, GPAX calculator, focus mode, and AI schedule scanning.",
+  "requestFramePermissions": [],
+  "majorCapabilities": ["MAJOR_CAPABILITY_SERVER_SIDE_GEMINI_API"]
+}
