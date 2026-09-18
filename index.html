@@ -416,7 +416,7 @@
       </div>
     </div>
 
-    <!-- MODAL 1: MINIMAL AI SCANNER (NO API KEY INPUT) -->
+    <!-- MODAL 1: MINIMAL AI SCANNER -->
     <div v-if="showUploadModal" class="fixed inset-0 bg-black/60 backdrop-blur-sm flex items-center justify-center p-4 z-50">
       <div class="bg-app-card dark:bg-app-darkCard border border-app-border dark:border-app-darkBorder rounded-2xl p-5 max-w-sm w-full space-y-4 shadow-xl transition-all">
         <div class="flex justify-between items-center border-b dark:border-slate-800 pb-3">
@@ -576,13 +576,14 @@
         const showQuickAddMenu = ref(false);
         const showAddCourseModal = ref(false);
         const showAddExamModal = ref(false);
-        const showUploadModal = ref(false);
+        window.showUploadModal = ref(false);
+        const showUploadModal = window.showUploadModal;
         const isScanning = ref(false);
         const selectedCourse = ref(null);
         const autoNotifications = ref([]);
 
-        // FIXED EMBEDDED API KEY
-        const geminiApiKey = ref('AQ.Ab8RN6K4gp9oqpdhVlUUR9FBzqS3EIvKrvPF6vQFlITSFGgB2A');
+        // SAFE ENVIRONMENT API KEY ACCESSIBILITY
+        const geminiApiKey = ref(typeof process !== 'undefined' && process.env?.GEMINI_API_KEY ? process.env.GEMINI_API_KEY : 'AQ.Ab8RN6K4gp9oqpdhVlUUR9FBzqS3EIvKrvPF6vQFlITSFGgB2A');
         const selectedScanFile = ref(null);
         const previewImageUrl = ref(null);
         const fileInput = ref(null);
@@ -797,6 +798,11 @@
         // PROCESS REAL SCAN WITH GEMINI API
         const processScanWithGemini = async () => {
           if (!selectedScanFile.value) return;
+
+          if (!geminiApiKey.value) {
+            alert("กรุณาตั้งค่า Gemini API Key ก่อนใช้งานระบบสแกนเอกสาร");
+            return;
+          }
 
           isScanning.value = true;
           scanAbortController = new AbortController();
