@@ -43,7 +43,7 @@
 </head>
 <body class="bg-app-bg dark:bg-app-darkBg text-slate-800 dark:text-slate-100 antialiased min-h-full pb-28 md:pb-8 transition-colors duration-200">
 
-  <div id="app" class="max-w-5xl mx-auto p-4 md:p-6 space-y-5">
+  <div id="app" class="max-w-4xl mx-auto p-4 md:p-6 space-y-5">
     
     <!-- 1. TOP BAR / HEADER -->
     <header class="flex justify-between items-center bg-app-card dark:bg-app-darkCard p-4 rounded-2xl border border-app-border dark:border-app-darkBorder shadow-sm">
@@ -81,7 +81,7 @@
             <i class="fa-solid fa-plus"></i> เพิ่มข้อมูล
           </button>
           <div v-if="showQuickAddMenu" class="absolute right-0 mt-2 w-48 bg-app-card dark:bg-app-darkCard border border-app-border dark:border-app-darkBorder rounded-xl shadow-xl p-2 z-50 text-xs font-semibold space-y-1">
-            <button @click="showUploadModal = true; showQuickAddMenu = false" class="w-full text-left px-3 py-2 hover:bg-slate-100 dark:hover:bg-slate-800 rounded-lg flex items-center gap-2 text-indigo-600 dark:text-indigo-400"><i class="fa-solid fa-wand-magic-sparkles"></i> AI สแกนเอกสาร</button>
+            <button @click="openUploadModal" class="w-full text-left px-3 py-2 hover:bg-slate-100 dark:hover:bg-slate-800 rounded-lg flex items-center gap-2 text-indigo-600 dark:text-indigo-400"><i class="fa-solid fa-wand-magic-sparkles"></i> AI สแกนเอกสาร</button>
             <button @click="activeTab = 'tasks'; showQuickAddMenu = false" class="w-full text-left px-3 py-2 hover:bg-slate-100 dark:hover:bg-slate-800 rounded-lg flex items-center gap-2"><i class="fa-solid fa-check-square"></i> เพิ่มการบ้าน / งาน</button>
             <button @click="showAddCourseModal = true; showQuickAddMenu = false" class="w-full text-left px-3 py-2 hover:bg-slate-100 dark:hover:bg-slate-800 rounded-lg flex items-center gap-2"><i class="fa-solid fa-book"></i> เพิ่มรายวิชาใหม่</button>
             <button @click="showAddExamModal = true; showQuickAddMenu = false" class="w-full text-left px-3 py-2 hover:bg-slate-100 dark:hover:bg-slate-800 rounded-lg flex items-center gap-2"><i class="fa-solid fa-file-pen"></i> เพิ่มกำหนดการสอบ</button>
@@ -107,7 +107,7 @@
       <button @click="autoNotifications.shift()" class="text-amber-500 hover:text-amber-700"><i class="fa-solid fa-xmark"></i></button>
     </section>
 
-    <!-- FULL 7-TAB DESKTOP NAVIGATION -->
+    <!-- NAVIGATION TABS -->
     <nav class="hidden md:flex gap-1.5 overflow-x-auto pb-1">
       <button v-for="tab in navTabs" :key="tab.id" @click="activeTab = tab.id"
               :class="activeTab === tab.id ? 'bg-slate-900 dark:bg-white text-white dark:text-slate-900' : 'bg-app-card dark:bg-app-darkCard text-slate-500 border border-app-border dark:border-app-darkBorder hover:border-slate-400'"
@@ -119,12 +119,12 @@
     <!-- TAB 1: 🏠 TODAY (DASHBOARD) -->
     <main v-if="activeTab === 'today'" class="space-y-4">
       <div class="space-y-1">
-        <h2 class="text-xl md:text-2xl font-bold tracking-tight">TODAY OVERVIEW 🏠</h2>
+        <h2 class="text-lg md:text-xl font-bold tracking-tight">TODAY OVERVIEW 🏠</h2>
         <p class="text-xs text-slate-500 font-medium">สัปดาห์ที่ {{ currentWeekNum }} ของเทอม • {{ fullFormattedDate }}</p>
       </div>
 
       <!-- TODAY's SCHEDULE TIMELINE WIDGET -->
-      <section class="bg-app-card dark:bg-app-darkCard p-4 md:p-5 rounded-2xl border border-app-border dark:border-app-darkBorder shadow-sm space-y-3">
+      <section class="bg-app-card dark:bg-app-darkCard p-4 rounded-2xl border border-app-border dark:border-app-darkBorder shadow-sm space-y-3">
         <h3 class="font-bold text-xs md:text-sm text-slate-700 dark:text-slate-200 flex items-center gap-2">
           <i class="fa-solid fa-calendar-day text-blue-500"></i> ตารางเรียนวันนี้ ({{ currentDayName }})
         </h3>
@@ -143,7 +143,7 @@
       </section>
 
       <!-- HIGH PRIORITY TASKS WIDGET -->
-      <section class="bg-app-card dark:bg-app-darkCard p-4 md:p-5 rounded-2xl border border-app-border dark:border-app-darkBorder shadow-sm space-y-3">
+      <section class="bg-app-card dark:bg-app-darkCard p-4 rounded-2xl border border-app-border dark:border-app-darkBorder shadow-sm space-y-3">
         <div class="flex justify-between items-center">
           <h3 class="font-bold text-xs md:text-sm text-red-600 dark:text-red-400 flex items-center gap-2">
             <span class="w-2 h-2 rounded-full bg-red-500 animate-ping"></span> 🔴 งานด่วนที่สุด (High Priority)
@@ -190,16 +190,16 @@
     <main v-if="activeTab === 'schedule'" class="space-y-4">
       <div class="flex justify-between items-center">
         <h2 class="font-bold text-base">📅 ตารางเรียนประจำสัปดาห์ (Weekly Schedule)</h2>
-        <button @click="showUploadModal = true" class="px-3 py-1.5 bg-indigo-600 text-white text-xs font-bold rounded-xl shadow flex items-center gap-1"><i class="fa-solid fa-wand-magic-sparkles"></i> AI สแกนตาราง</button>
+        <button @click="openUploadModal" class="px-3 py-1.5 bg-indigo-600 text-white text-xs font-bold rounded-xl shadow flex items-center gap-1"><i class="fa-solid fa-wand-magic-sparkles"></i> AI สแกนตาราง</button>
       </div>
 
       <div class="grid grid-cols-1 gap-3">
         <div v-for="day in weekDays" :key="day.key" class="bg-app-card dark:bg-app-darkCard p-4 rounded-2xl border border-app-border dark:border-app-darkBorder shadow-sm space-y-2">
-          <h3 class="font-bold text-xs md:text-sm text-slate-500 dark:text-slate-400 border-b pb-1 flex items-center gap-2">
+          <h3 class="font-bold text-xs md:text-sm text-slate-500 dark:text-slate-400 border-b dark:border-slate-800 pb-1.5 flex items-center gap-2">
             <span class="w-2.5 h-2.5 rounded-full" :class="day.colorClass"></span> {{ day.label }}
           </h3>
           <div v-if="getScheduleForDay(day.key).length > 0" class="grid grid-cols-1 sm:grid-cols-2 gap-2">
-            <div v-for="item in getScheduleForDay(day.key)" :key="item.id" @click="openCourseDetailByCourseId(item.courseId)" class="p-3 bg-slate-50 dark:bg-slate-800 rounded-xl border border-app-border dark:border-app-darkBorder hover:border-app-accent cursor-pointer transition">
+            <div v-for="item in getScheduleForDay(day.key)" :key="item.id" @click="openCourseDetailByCourseId(item.courseId)" class="p-3 bg-slate-50 dark:bg-slate-800/60 rounded-xl border border-app-border dark:border-app-darkBorder hover:border-app-accent cursor-pointer transition">
               <div class="flex justify-between items-start">
                 <span class="text-[10px] font-bold px-2 py-0.5 rounded bg-blue-100 text-blue-800 dark:bg-blue-900/60 dark:text-blue-300">{{ item.code }}</span>
                 <span class="text-[11px] font-mono font-bold text-slate-600 dark:text-slate-300"><i class="fa-regular fa-clock mr-1"></i>{{ item.schedule.start }} - {{ item.schedule.end }}</span>
@@ -218,7 +218,7 @@
       <div class="flex justify-between items-center">
         <h2 class="font-bold text-base">📚 วิชาที่ลงทะเบียน (Course Hub)</h2>
         <div class="flex gap-2">
-          <button @click="showUploadModal = true" class="px-3 py-1.5 bg-indigo-600 text-white text-xs font-bold rounded-xl shadow flex items-center gap-1"><i class="fa-solid fa-wand-magic-sparkles"></i> AI สแกนวิชา</button>
+          <button @click="openUploadModal" class="px-3 py-1.5 bg-indigo-600 text-white text-xs font-bold rounded-xl shadow flex items-center gap-1"><i class="fa-solid fa-wand-magic-sparkles"></i> AI สแกนวิชา</button>
           <button @click="showAddCourseModal = true" class="px-3 py-1.5 bg-slate-900 dark:bg-white text-white dark:text-slate-900 text-xs font-bold rounded-xl">+ เพิ่มวิชา</button>
         </div>
       </div>
@@ -301,7 +301,7 @@
       </div>
     </main>
 
-    <!-- TAB 6: 🎓 GPAX (REAL CALCULATOR SIMULATOR) -->
+    <!-- TAB 6: 🎓 GPAX -->
     <main v-if="activeTab === 'gpa'" class="space-y-4">
       <section class="bg-app-card dark:bg-app-darkCard p-5 rounded-2xl border border-app-border dark:border-app-darkBorder shadow-sm space-y-4">
         <h2 class="font-bold text-base">🎓 Real GPAX Calculator & Simulator</h2>
@@ -365,7 +365,7 @@
       </section>
     </main>
 
-    <!-- MOBILE BOTTOM NAVIGATION (7 TABS SLIDABLE) -->
+    <!-- MOBILE BOTTOM NAVIGATION -->
     <div class="md:hidden fixed bottom-0 left-0 right-0 z-40 bg-app-card dark:bg-app-darkCard border-t border-app-border dark:border-app-darkBorder px-2 py-2 shadow-lg">
       <nav class="flex justify-around items-center text-[10px]">
         <button v-for="tab in navTabs.slice(0, 3)" :key="tab.id" @click="activeTab = tab.id"
@@ -387,13 +387,13 @@
 
       <!-- FAB MENU POPUP -->
       <div v-if="showFabMenu" class="absolute bottom-16 left-1/2 -translate-x-1/2 bg-app-card dark:bg-app-darkCard border border-app-border dark:border-app-darkBorder shadow-2xl rounded-2xl p-2 w-48 space-y-1 text-xs font-semibold">
-        <button @click="showUploadModal = true; showFabMenu = false" class="w-full text-left px-3 py-2 hover:bg-slate-100 dark:hover:bg-slate-800 rounded-xl flex items-center gap-2 text-indigo-600 dark:text-indigo-400"><i class="fa-solid fa-wand-magic-sparkles"></i> AI สแกนเอกสาร</button>
+        <button @click="openUploadModal(); showFabMenu = false" class="w-full text-left px-3 py-2 hover:bg-slate-100 dark:hover:bg-slate-800 rounded-xl flex items-center gap-2 text-indigo-600 dark:text-indigo-400"><i class="fa-solid fa-wand-magic-sparkles"></i> AI สแกนเอกสาร</button>
         <button @click="activeTab = 'tasks'; showFabMenu = false" class="w-full text-left px-3 py-2 hover:bg-slate-100 dark:hover:bg-slate-800 rounded-xl flex items-center gap-2">📝 เพิ่มงาน / การบ้าน</button>
         <button @click="showAddCourseModal = true; showFabMenu = false" class="w-full text-left px-3 py-2 hover:bg-slate-100 dark:hover:bg-slate-800 rounded-xl flex items-center gap-2">📚 เพิ่มรายวิชา</button>
       </div>
     </div>
 
-    <!-- ⭐ FOCUS MODE OVERLAY (POMODORO TIMER) -->
+    <!-- ⭐ FOCUS MODE OVERLAY -->
     <div v-if="isFocusMode" class="fixed inset-0 bg-slate-950 text-white z-50 flex flex-col items-center justify-center p-6 space-y-6">
       <button @click="isFocusMode = false" class="absolute top-6 right-6 text-slate-400 hover:text-white text-xl"><i class="fa-solid fa-xmark"></i> Exit Focus</button>
 
@@ -414,60 +414,51 @@
           <i class="fa-solid fa-rotate-right"></i>
         </button>
       </div>
-
-      <div class="max-w-md w-full bg-slate-900 border border-slate-800 rounded-2xl p-4 space-y-2 text-xs">
-        <p class="font-bold text-slate-400">🎯 Today's Focus Goal:</p>
-        <p class="text-slate-200">• อ่าน Chapter 3 และทำโจทย์ท้ายบท 10 ข้อ</p>
-      </div>
     </div>
 
-    <!-- MODAL 1: REAL GEMINI VISION AI SCANNER -->
+    <!-- MODAL 1: MINIMAL AI SCANNER (NO API KEY INPUT) -->
     <div v-if="showUploadModal" class="fixed inset-0 bg-black/60 backdrop-blur-sm flex items-center justify-center p-4 z-50">
-      <div class="bg-app-card dark:bg-app-darkCard border border-app-border dark:border-app-darkBorder rounded-2xl p-5 max-w-md w-full space-y-4 shadow-xl">
-        <div class="flex justify-between items-center border-b pb-3">
-          <h3 class="font-bold text-base flex items-center gap-2">
-            <i class="fa-solid fa-wand-magic-sparkles text-indigo-500"></i> AI Real Schedule Scanner
+      <div class="bg-app-card dark:bg-app-darkCard border border-app-border dark:border-app-darkBorder rounded-2xl p-5 max-w-sm w-full space-y-4 shadow-xl transition-all">
+        <div class="flex justify-between items-center border-b dark:border-slate-800 pb-3">
+          <h3 class="font-bold text-sm flex items-center gap-2 text-slate-800 dark:text-slate-100">
+            <i class="fa-solid fa-wand-magic-sparkles text-indigo-500"></i> AI Schedule Scanner
           </h3>
-          <button @click="showUploadModal = false" class="text-slate-400 hover:text-slate-600"><i class="fa-solid fa-xmark text-lg"></i></button>
+          <button @click="closeUploadModal" class="text-slate-400 hover:text-slate-600"><i class="fa-solid fa-xmark text-base"></i></button>
         </div>
 
         <div class="space-y-3">
-          <!-- GEMINI API KEY INPUT -->
-          <div>
-            <label class="block text-[11px] font-bold text-slate-500 mb-1">
-              Gemini API Key (ใช้งานสแกนรูปตารางจริง):
-            </label>
-            <input v-model="geminiApiKey" type="password" placeholder="วาง Gemini API Key ที่นี่..." 
-                   class="w-full bg-slate-50 dark:bg-slate-800 border border-app-border dark:border-app-darkBorder rounded-xl p-2.5 text-xs outline-none focus:border-indigo-500">
-            <p class="text-[10px] text-slate-400 mt-1">รับ API Key ฟรีได้จาก Google AI Studio</p>
-          </div>
-
           <!-- IMAGE UPLOAD AREA -->
-          <div class="border-2 border-dashed border-indigo-200 dark:border-indigo-900/60 rounded-2xl p-4 text-center space-y-2 relative bg-indigo-50/30 dark:bg-indigo-950/20 hover:bg-indigo-50/60 transition">
-            <input type="file" @change="handleFileUpload" accept="image/*" class="absolute inset-0 opacity-0 cursor-pointer w-full h-full z-10">
+          <div class="border-2 border-dashed border-indigo-200 dark:border-indigo-900/60 rounded-2xl p-5 text-center space-y-2 relative bg-indigo-50/30 dark:bg-indigo-950/20 hover:bg-indigo-50/60 transition">
+            <input type="file" ref="fileInput" @change="handleFileUpload" accept="image/*" class="absolute inset-0 opacity-0 cursor-pointer w-full h-full z-10" :disabled="isScanning">
             <div v-if="previewImageUrl" class="space-y-2">
-              <img :src="previewImageUrl" class="max-h-36 mx-auto rounded-lg shadow border">
-              <p class="text-[10px] text-emerald-600 dark:text-emerald-400 font-bold"><i class="fa-solid fa-circle-check"></i> พร้อมสแกนภาพนี้แล้ว</p>
+              <img :src="previewImageUrl" class="max-h-40 mx-auto rounded-xl shadow border border-slate-200 dark:border-slate-700">
+              <p class="text-[11px] text-emerald-600 dark:text-emerald-400 font-medium flex items-center justify-center gap-1">
+                <i class="fa-solid fa-circle-check"></i> พร้อมสแกนรูปภาพนี้
+              </p>
             </div>
-            <div v-else class="space-y-1">
+            <div v-else class="space-y-1.5 py-2">
               <i class="fa-solid fa-cloud-arrow-up text-3xl text-indigo-500"></i>
-              <p class="text-xs font-bold text-slate-700 dark:text-slate-200">อัปโหลดรูปตารางเรียน / วันสอบ</p>
-              <p class="text-[10px] text-slate-400">คลิกหรือลากรูปตารางมาวางที่นี่</p>
+              <p class="text-xs font-semibold text-slate-700 dark:text-slate-200">อัปโหลดรูปตารางเรียน / วันสอบ</p>
+              <p class="text-[10px] text-slate-400">แตะเพื่อเลือกรูปภาพ หรือ ลากไฟล์มาวางที่นี่</p>
             </div>
           </div>
         </div>
 
-        <!-- SCANNING STATE -->
-        <div v-if="isScanning" class="p-3 bg-indigo-50 dark:bg-indigo-950/40 border border-indigo-200 dark:border-indigo-900 rounded-xl text-center space-y-2">
-          <i class="fa-solid fa-spinner animate-spin text-indigo-600 text-xl"></i>
-          <p class="text-xs font-semibold text-indigo-900 dark:text-indigo-300">Gemini AI กำลังอ่านข้อความและแปลงตาราง...</p>
+        <!-- SCANNING LOADING STATE WITH CANCEL OPTION -->
+        <div v-if="isScanning" class="p-3.5 bg-indigo-50 dark:bg-indigo-950/40 border border-indigo-200 dark:border-indigo-900 rounded-xl text-center space-y-2">
+          <i class="fa-solid fa-spinner animate-spin text-indigo-600 text-2xl"></i>
+          <p class="text-xs font-semibold text-indigo-900 dark:text-indigo-300">Gemini AI กำลังอ่านและประมวลผลรูปภาพ...</p>
+          <button @click="cancelScanning" class="px-3 py-1 bg-rose-500 hover:bg-rose-600 text-white font-semibold rounded-lg text-[11px] transition shadow-sm">
+            <i class="fa-solid fa-ban mr-1"></i> ยกเลิกการสแกน & เลือกรูปใหม่
+          </button>
         </div>
 
-        <div class="flex gap-2">
-          <button @click="showUploadModal = false" class="w-1/3 py-2 bg-slate-100 dark:bg-slate-800 text-slate-600 dark:text-slate-300 font-bold rounded-xl text-xs">ยกเลิก</button>
-          <button @click="processScanWithGemini" :disabled="!selectedScanFile || isScanning" 
-                  class="w-2/3 py-2 bg-indigo-600 hover:bg-indigo-700 disabled:opacity-50 text-white font-bold rounded-xl text-xs shadow flex items-center justify-center gap-1.5">
-            <i class="fa-solid fa-bolt"></i> เริ่มสแกนรูปจริง
+        <!-- FOOTER BUTTONS -->
+        <div v-else class="flex gap-2">
+          <button @click="closeUploadModal" class="w-1/3 py-2 bg-slate-100 dark:bg-slate-800 text-slate-600 dark:text-slate-300 font-bold rounded-xl text-xs">ปิด</button>
+          <button @click="processScanWithGemini" :disabled="!selectedScanFile" 
+                  class="w-2/3 py-2 bg-indigo-600 hover:bg-indigo-700 disabled:opacity-50 text-white font-bold rounded-xl text-xs shadow flex items-center justify-center gap-1.5 transition">
+            <i class="fa-solid fa-bolt"></i> เริ่มสแกนตาราง
           </button>
         </div>
       </div>
@@ -590,10 +581,14 @@
         const selectedCourse = ref(null);
         const autoNotifications = ref([]);
 
-        // AI GEMINI SCANNING REFS
-        const geminiApiKey = ref(localStorage.getItem('STUDYOS_GEMINI_KEY') || '');
+        // FIXED EMBEDDED API KEY
+        const geminiApiKey = ref('AQ.Ab8RN6K4gp9oqpdhVlUUR9FBzqS3EIvKrvPF6vQFlITSFGgB2A');
         const selectedScanFile = ref(null);
         const previewImageUrl = ref(null);
+        const fileInput = ref(null);
+        
+        // ABORT CONTROLLER FOR AI CANCELATION
+        let scanAbortController = null;
 
         const requestNotificationPermission = async () => {
           if (!("Notification" in window)) {
@@ -760,12 +755,35 @@
           autoNotifications.value = list;
         };
 
+        // OPEN / CLOSE UPLOAD MODAL
+        const openUploadModal = () => {
+          showUploadModal.value = true;
+          showQuickAddMenu.value = false;
+        };
+
+        const closeUploadModal = () => {
+          cancelScanning();
+          showUploadModal.value = false;
+        };
+
         // IMAGE FILE UPLOAD HANDLER
         const handleFileUpload = (event) => {
           const file = event.target.files[0];
           if (!file) return;
           selectedScanFile.value = file;
           previewImageUrl.value = URL.createObjectURL(file);
+        };
+
+        // CANCEL SCANNING FUNCTION
+        const cancelScanning = () => {
+          if (scanAbortController) {
+            scanAbortController.abort();
+            scanAbortController = null;
+          }
+          isScanning.value = false;
+          selectedScanFile.value = null;
+          previewImageUrl.value = null;
+          if (fileInput.value) fileInput.value.value = '';
         };
 
         // CONVERT FILE TO BASE64
@@ -776,16 +794,12 @@
           reader.onerror = error => reject(error);
         });
 
-        // PROCESS REAL SCAN WITH GEMINI 2.5 FLASH API
+        // PROCESS REAL SCAN WITH GEMINI API
         const processScanWithGemini = async () => {
-          if (!geminiApiKey.value) {
-            alert('โปรดระบุ Gemini API Key ก่อนใช้งานสแกนรูปจริงครับ');
-            return;
-          }
           if (!selectedScanFile.value) return;
 
           isScanning.value = true;
-          localStorage.setItem('STUDYOS_GEMINI_KEY', geminiApiKey.value);
+          scanAbortController = new AbortController();
 
           try {
             const base64Data = await fileToBase64(selectedScanFile.value);
@@ -817,9 +831,10 @@
   ]
 }`;
 
-            const response = await fetch(`https://generativelanguage.googleapis.com/v1beta/models/gemini-3.6-flash:generateContent?key=${geminiApiKey.value}`, {
+            const response = await fetch(`https://generativelanguage.googleapis.com/v1beta/models/gemini-2.5-flash:generateContent?key=${geminiApiKey.value}`, {
               method: 'POST',
               headers: { 'Content-Type': 'application/json' },
+              signal: scanAbortController.signal,
               body: JSON.stringify({
                 contents: [{
                   parts: [
@@ -874,15 +889,18 @@
             }
 
             confetti({ particleCount: 70 });
-            showUploadModal.value = false;
-            selectedScanFile.value = null;
-            previewImageUrl.value = null;
+            closeUploadModal();
 
           } catch (error) {
-            console.error(error);
-            alert(`⚠️ การสแกนล้มเหลว: ${error.message}`);
+            if (error.name === 'AbortError') {
+              console.log('สแกนถูกยกเลิกแล้ว');
+            } else {
+              console.error(error);
+              alert(`⚠️ การสแกนล้มเหลว: ${error.message}`);
+            }
           } finally {
             isScanning.value = false;
+            scanAbortController = null;
           }
         };
 
@@ -981,14 +999,14 @@
         return {
           activeTab, isDarkMode, user, streakCount, currentWeekNum, selectedSemester, showFabMenu, showQuickAddMenu,
           showAddCourseModal, showAddExamModal, showUploadModal, isScanning, selectedCourse, autoNotifications,
-          geminiApiKey, selectedScanFile, previewImageUrl,
+          geminiApiKey, selectedScanFile, previewImageUrl, fileInput,
           fullFormattedDate, navTabs, weekDays, currentTermCourses, tasks, currentTermExams, newCourse, newExam, newTask,
           currentDayName, todayScheduleList, gpaxInput, calculatedGPAX, currentTermTotalCredits, realTargetAnalysisMessage,
           calculatedBestCaseGPAX, calculatedMidCaseGPAX, totalTasksCount, completedTasksCount, realCompletionRate,
           sortedTasks, topPriorityTasks, sortedExams, nextExam, examTimer, isFocusMode, focusTime, focusTimerDisplay,
           isFocusRunning, focusSessionsCompleted, requestNotificationPermission, toggleFocusTimer, resetFocusTimer, getScheduleForDay, getCourseCode,
           getExamStatusBadge, getPriorityBadgeClass, getDeadlineLabel, openCourseDetail, openCourseDetailByCourseId,
-          addCourse, addExam, addTask, completeTask, deleteTask, toggleDarkMode, handleFileUpload, processScanWithGemini, loginWithGoogle, logout
+          addCourse, addExam, addTask, completeTask, deleteTask, toggleDarkMode, openUploadModal, closeUploadModal, handleFileUpload, cancelScanning, processScanWithGemini, loginWithGoogle, logout
         };
       }
     }).mount('#app');
