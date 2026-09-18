@@ -670,20 +670,10 @@
 
         // SEMESTER ISOLATED DATA STORE
         const semesterData = ref({
-          '1/2569': {
-            courses: [
-              { id: 'c1', code: 'MATH-102', name: 'Calculus II', instructor: 'ดร.สมชาย ใจดี', credit: 3, schedule: { day: 'FRI', start: '08:30', end: '10:30', room: 'SC-201' } },
-              { id: 'c2', code: 'SWE-101', name: 'Software Dev', instructor: 'ผศ.วิชัย อุดม', credit: 3, schedule: { day: 'FRI', start: '13:30', end: '15:30', room: 'ST-502' } }
-            ],
-            tasks: [
-              { id: 't1', courseId: 'c1', title: 'ทำแบบฝึกหัด Calculus', deadline: '2026-09-19', priority: 'HIGH', completed: false },
-              { id: 't2', courseId: 'c2', title: 'เขียน ER-Diagram System', deadline: '2026-09-21', priority: 'MEDIUM', completed: false }
-            ],
-            exams: [
-              { id: 'e1', courseId: 'c1', title: 'Calculus II Midterm Exam', date: '2026-10-15T09:00:00', room: 'SC-201' }
-            ]
-          },
-          '2/2569': { courses: [], tasks: [], exams: [] }
+          '1/2569': { courses: [], tasks: [], exams: [] },
+          '2/2569': { courses: [], tasks: [], exams: [] },
+          '1/2570': { courses: [], tasks: [], exams: [] },
+          '2/2571': { courses: [], tasks: [], exams: [] }
         });
 
         const currentTermCourses = computed(() => semesterData.value[selectedSemester.value]?.courses || []);
