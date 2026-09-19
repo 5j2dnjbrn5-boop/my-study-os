@@ -57,17 +57,51 @@
         </button>
         
         <div>
-          <div class="flex items-center gap-2">
+          <div class="flex items-center gap-2 flex-wrap sm:flex-nowrap">
             <h1 class="font-bold text-base leading-tight">{{ user ? user.displayName : 'STUDY OS' }}</h1>
             <select v-model="selectedSemester" class="bg-slate-100 dark:bg-slate-800 border border-app-border dark:border-app-darkBorder rounded-lg px-2 py-0.5 text-xs font-semibold outline-none">
               <option value="1/2569">เทอม 1/2569</option>
               <option value="2/2569">เทอม 2/2569</option>
             </select>
+
+            <!-- REAL-TIME CLOUD AUTO-SAVE INDICATOR (ไอคอนก้อนเมฆเล็กๆ แสดงสถานะการบันทึก) -->
+            <button @click="forceSave"
+                    :title="saveStatusTitle"
+                    class="inline-flex items-center gap-1.5 px-2.5 py-0.5 rounded-lg text-xs font-medium transition-all duration-300 border cursor-pointer select-none"
+                    :class="{
+                      'bg-emerald-50 dark:bg-emerald-950/40 text-emerald-700 dark:text-emerald-300 border-emerald-200 dark:border-emerald-800/70 shadow-xs hover:bg-emerald-100 dark:hover:bg-emerald-900/40': saveStatus === 'saved',
+                      'bg-amber-50 dark:bg-amber-950/40 text-amber-700 dark:text-amber-300 border-amber-200 dark:border-amber-800/70 animate-pulse': saveStatus === 'saving',
+                      'bg-rose-50 dark:bg-rose-950/40 text-rose-700 dark:text-rose-300 border-rose-200 dark:border-rose-800/70 hover:bg-rose-100 dark:hover:bg-rose-900/40': saveStatus === 'error'
+                    }">
+              <!-- Saving state: small cloud arrow bouncing -->
+              <span v-if="saveStatus === 'saving'" class="flex items-center gap-1">
+                <i class="fa-solid fa-cloud-arrow-up text-amber-500 text-xs animate-bounce"></i>
+                <span class="text-[10px] hidden sm:inline font-semibold">กำลังเซฟ...</span>
+              </span>
+              <!-- Saved state: small cloud with check icon -->
+              <span v-else-if="saveStatus === 'saved'" class="flex items-center gap-1">
+                <span class="relative inline-flex items-center justify-center">
+                  <i class="fa-solid fa-cloud text-emerald-500 text-xs"></i>
+                  <i class="fa-solid fa-check text-[7px] text-white absolute font-black -mt-0.5"></i>
+                </span>
+                <span class="text-[10px] hidden sm:inline font-semibold">เซฟแล้ว</span>
+              </span>
+              <!-- Error state: small cloud with exclamation -->
+              <span v-else class="flex items-center gap-1">
+                <i class="fa-solid fa-cloud text-rose-500 text-xs"></i>
+                <i class="fa-solid fa-triangle-exclamation text-[8px] text-rose-500"></i>
+                <span class="text-[10px] hidden sm:inline font-semibold">เซฟไม่สำเร็จ</span>
+              </span>
+            </button>
           </div>
           <p class="text-xs text-slate-400 font-medium flex items-center gap-1.5 mt-0.5">
             <span>🔥 Streak: {{ streakCount }} วัน</span>
             <span>•</span>
             <span>GPAX: {{ calculatedGPAX.toFixed(2) }}</span>
+            <span class="hidden sm:inline text-slate-300 dark:text-slate-600">•</span>
+            <span class="hidden sm:inline text-[10px] text-slate-400" :title="'เวลาบันทึกล่าสุด: ' + lastSavedTime">
+              <i class="fa-solid fa-cloud mr-0.5 text-slate-400 text-[9px]"></i> {{ lastSavedTime }}
+            </span>
           </p>
         </div>
       </div>
@@ -321,9 +355,14 @@
             </div>
             <p class="text-xs text-slate-400"><i class="fa-regular fa-clock mr-1"></i>{{ new Date(exam.date).toLocaleString('th-TH') }} • ห้องสอบ {{ exam.room }}</p>
           </div>
-          <span :class="getExamStatusBadge(exam.date).color" class="text-xs font-bold px-2.5 py-1 rounded-full shrink-0">
-            {{ getExamStatusBadge(exam.date).label }}
-          </span>
+          <div class="flex items-center gap-2 shrink-0">
+            <span :class="getExamStatusBadge(exam.date).color" class="text-xs font-bold px-2.5 py-1 rounded-full">
+              {{ getExamStatusBadge(exam.date).label }}
+            </span>
+            <button @click="deleteExam(exam.id)" title="ลบกำหนดการสอบนี้" class="w-7 h-7 rounded-lg hover:bg-rose-100 dark:hover:bg-rose-950/50 text-slate-400 hover:text-rose-600 flex items-center justify-center text-xs transition">
+              <i class="fa-solid fa-trash-can"></i>
+            </button>
+          </div>
         </div>
       </div>
       <p v-if="currentTermExams.length === 0" class="text-slate-400 text-xs text-center py-6">ยังไม่มีกำหนดการสอบที่บันทึกไว้</p>
@@ -575,7 +614,12 @@
           </div>
         </div>
 
-        <button @click="selectedCourse = null" class="w-full py-2 bg-slate-900 dark:bg-white text-white dark:text-slate-900 font-bold rounded-xl text-xs">ปิด</button>
+        <div class="flex gap-2 pt-1">
+          <button @click="deleteCourse(selectedCourse.id)" class="px-3 py-2 bg-rose-50 hover:bg-rose-100 dark:bg-rose-950/40 text-rose-600 dark:text-rose-400 font-bold rounded-xl text-xs flex items-center gap-1 transition">
+            <i class="fa-solid fa-trash-can"></i> ลบวิชานี้
+          </button>
+          <button @click="selectedCourse = null" class="flex-1 py-2 bg-slate-900 dark:bg-white text-white dark:text-slate-900 font-bold rounded-xl text-xs">ปิด</button>
+        </div>
       </div>
     </div>
 
@@ -583,7 +627,7 @@
 
   <script type="module">
     import { initializeApp } from "https://www.gstatic.com/firebasejs/10.8.0/firebase-app.js";
-    import { getAuth, GoogleAuthProvider, signInWithPopup, signOut } from "https://www.gstatic.com/firebasejs/10.8.0/firebase-auth.js";
+    import { getAuth, GoogleAuthProvider, signInWithPopup, signOut, onAuthStateChanged } from "https://www.gstatic.com/firebasejs/10.8.0/firebase-auth.js";
     import { getFirestore, doc, setDoc, onSnapshot } from "https://www.gstatic.com/firebasejs/10.8.0/firebase-firestore.js";
 
     const firebaseConfig = { apiKey: "AIzaSyCJnf_Oi38R2mPcdrVij8p0O1EoUQQWQhg", authDomain: "study-os-app-159f7.firebaseapp.com", projectId: "study-os-app-159f7" };
@@ -600,8 +644,33 @@
         const isDarkMode = ref(false);
         const user = ref(null);
         
-        // STREAK & REAL DATA INITIALIZATION (REMOVED MOCK DATA)
-        const streakCount = ref(0);
+        // STREAK & REAL DATA INITIALIZATION WITH PERSISTENCE
+        const defaultSemesterData = {
+          '1/2569': { courses: [], tasks: [], exams: [] },
+          '2/2569': { courses: [], tasks: [], exams: [] }
+        };
+        let initialData = defaultSemesterData;
+        try {
+          const cached = localStorage.getItem('study_os_data');
+          if (cached) initialData = JSON.parse(cached);
+        } catch (e) {}
+
+        let initialStreak = 0;
+        let initialGPAX = { currentGPAX: 0.00, pastCredits: 0, targetGPAX: 3.50 };
+        let initialFocus = 0;
+        try {
+          const cachedMeta = localStorage.getItem('study_os_meta');
+          if (cachedMeta) {
+            const meta = JSON.parse(cachedMeta);
+            if (meta.streakCount !== undefined) initialStreak = meta.streakCount;
+            if (meta.gpaxInput !== undefined) initialGPAX = meta.gpaxInput;
+            if (meta.focusSessionsCompleted !== undefined) initialFocus = meta.focusSessionsCompleted;
+          }
+        } catch (e) {}
+
+        const streakCount = ref(initialStreak);
+        const gpaxInput = ref(initialGPAX);
+        const focusSessionsCompleted = ref(initialFocus);
         const selectedSemester = ref('1/2569');
         const showFabMenu = ref(false);
         const showQuickAddMenu = ref(false);
@@ -658,7 +727,6 @@
         const focusTime = ref(25 * 60);
         const isFocusRunning = ref(false);
         let focusInterval = null;
-        const focusSessionsCompleted = ref(0);
 
         const focusTimerDisplay = computed(() => {
           const m = String(Math.floor(focusTime.value / 60)).padStart(2, '0');
@@ -713,20 +781,73 @@
           { key: 'SUN', label: 'วันอาทิตย์ (Sunday)', colorClass: 'bg-red-400' }
         ];
 
-        // INITIAL DATA STORE WITH LOCAL STORAGE BACKUP
-        const defaultSemesterData = {
-          '1/2569': { courses: [], tasks: [], exams: [] },
-          '2/2569': { courses: [], tasks: [], exams: [] }
-        };
-        let initialData = defaultSemesterData;
-        try {
-          const cached = localStorage.getItem('study_os_data');
-          if (cached) initialData = JSON.parse(cached);
-        } catch (e) {}
-
         const semesterData = ref(initialData);
-        watch(semesterData, (val) => {
-          try { localStorage.setItem('study_os_data', JSON.stringify(val)); } catch (e) {}
+
+        // REAL-TIME AUTO SAVE ENGINE WITH CLOUD ICON STATUS
+        const saveStatus = ref('saved'); // 'saved' | 'saving' | 'error'
+        const lastSavedTime = ref(new Date().toLocaleTimeString('th-TH', { hour: '2-digit', minute: '2-digit' }));
+        let saveDebounceTimer = null;
+        let isInitialSyncing = true;
+
+        const executeSave = async () => {
+          saveStatus.value = 'saving';
+          try {
+            const payload = {
+              semesterData: semesterData.value,
+              streakCount: streakCount.value,
+              gpaxInput: gpaxInput.value,
+              focusSessionsCompleted: focusSessionsCompleted.value,
+              updatedAt: new Date().toISOString()
+            };
+
+            // 1. Instant LocalStorage persistence (always works offline)
+            localStorage.setItem('study_os_data', JSON.stringify(payload.semesterData));
+            localStorage.setItem('study_os_meta', JSON.stringify({
+              streakCount: payload.streakCount,
+              gpaxInput: payload.gpaxInput,
+              focusSessionsCompleted: payload.focusSessionsCompleted
+            }));
+
+            // 2. Cloud Firestore real-time sync (if user is authenticated)
+            if (user.value && user.value.uid) {
+              await setDoc(doc(db, "users", user.value.uid), payload, { merge: true });
+            }
+
+            // Smooth UI feedback so user clearly perceives the cloud save transition
+            setTimeout(() => {
+              saveStatus.value = 'saved';
+              lastSavedTime.value = new Date().toLocaleTimeString('th-TH', { hour: '2-digit', minute: '2-digit' });
+            }, 200);
+          } catch (err) {
+            console.error("Realtime save error:", err);
+            saveStatus.value = 'error';
+          }
+        };
+
+        const triggerRealtimeSave = () => {
+          if (isInitialSyncing) return;
+          saveStatus.value = 'saving';
+          if (saveDebounceTimer) clearTimeout(saveDebounceTimer);
+          saveDebounceTimer = setTimeout(executeSave, 400);
+        };
+
+        const forceSave = () => {
+          if (saveDebounceTimer) clearTimeout(saveDebounceTimer);
+          executeSave();
+        };
+
+        const saveStatusTitle = computed(() => {
+          if (saveStatus.value === 'saving') return 'กำลังบันทึกข้อมูลแบบเรียลไทม์...';
+          if (saveStatus.value === 'saved') {
+            const dest = user.value ? 'Cloud Firestore & Local Storage' : 'Local Storage (เข้าสู่ระบบ Google เพื่อซิงก์ Cloud)';
+            return `บันทึกข้อมูลเรียบร้อยแล้ว (${lastSavedTime.value}) ไปยัง ${dest} • คลิกเพื่อบันทึกซ้ำทันที`;
+          }
+          return 'บันทึกข้อมูลไม่สำเร็จ • คลิกเพื่อลองบันทึกใหม่';
+        });
+
+        // Watch for ANY real-time changes to courses, tasks, exams, streak, GPAX, focus logs
+        watch([semesterData, streakCount, gpaxInput, focusSessionsCompleted], () => {
+          triggerRealtimeSave();
         }, { deep: true });
 
         const currentTermCourses = computed(() => semesterData.value[selectedSemester.value]?.courses || []);
@@ -755,7 +876,6 @@
         };
 
         // REAL GPAX CALCULATOR LOGIC
-        const gpaxInput = ref({ currentGPAX: 0.00, pastCredits: 0, targetGPAX: 3.50 });
         const currentTermTotalCredits = computed(() => currentTermCourses.value.reduce((sum, c) => sum + (c.credit || 0), 0));
 
         const calculatedGPAX = computed(() => gpaxInput.value.currentGPAX);
@@ -980,19 +1100,32 @@
         const addCourse = () => {
           if (!newCourse.value.code) return;
           semesterData.value[selectedSemester.value].courses.push({ id: 'c_' + Date.now(), ...newCourse.value });
+          newCourse.value = { code: '', name: '', instructor: '', credit: 3, schedule: { day: 'MON', start: '09:00', end: '12:00', room: '' } };
           showAddCourseModal.value = false;
+        };
+
+        const deleteCourse = (courseId) => {
+          if (confirm("คุณต้องการลบรายวิชานี้ใช่หรือไม่?")) {
+            semesterData.value[selectedSemester.value].courses = currentTermCourses.value.filter(c => c.id !== courseId);
+            selectedCourse.value = null;
+          }
         };
 
         const addExam = () => {
           if (!newExam.value.title) return;
           semesterData.value[selectedSemester.value].exams.push({ id: 'e_' + Date.now(), ...newExam.value });
+          newExam.value = { courseId: '', title: '', date: '', room: '' };
           showAddExamModal.value = false;
+        };
+
+        const deleteExam = (examId) => {
+          semesterData.value[selectedSemester.value].exams = currentTermExams.value.filter(e => e.id !== examId);
         };
 
         const addTask = () => {
           if (!newTask.value.title) return;
           semesterData.value[selectedSemester.value].tasks.push({ id: 't_' + Date.now(), ...newTask.value, completed: false });
-          newTask.value.title = '';
+          newTask.value = { title: '', courseId: '', deadline: new Date().toISOString().split('T')[0], priority: 'HIGH' };
         };
 
         const completeTask = (t) => { if (t.completed) confetti({ particleCount: 30 }); };
@@ -1006,10 +1139,10 @@
             onSnapshot(doc(db, "users", user.value.uid), (docSnap) => {
               if (docSnap.exists()) {
                 const data = docSnap.data();
-                semesterData.value = data.semesterData || semesterData.value;
-                gpaxInput.value = data.gpaxInput || gpaxInput.value;
-                streakCount.value = data.streakCount || 0;
-                focusSessionsCompleted.value = data.focusSessionsCompleted || 0;
+                if (data.semesterData) semesterData.value = data.semesterData;
+                if (data.gpaxInput) gpaxInput.value = data.gpaxInput;
+                if (data.streakCount !== undefined) streakCount.value = data.streakCount;
+                if (data.focusSessionsCompleted !== undefined) focusSessionsCompleted.value = data.focusSessionsCompleted;
               }
             });
           } catch (e) {
@@ -1022,7 +1155,7 @@
           try {
             await signOut(auth);
             user.value = null;
-            // Reset Data State to Initial Clean State
+            // Reset Data State
             semesterData.value = {
               '1/2569': { courses: [], tasks: [], exams: [] },
               '2/2569': { courses: [], tasks: [], exams: [] }
@@ -1030,6 +1163,9 @@
             streakCount.value = 0;
             focusSessionsCompleted.value = 0;
             gpaxInput.value = { currentGPAX: 0.00, pastCredits: 0, targetGPAX: 3.50 };
+            localStorage.removeItem('study_os_data');
+            localStorage.removeItem('study_os_meta');
+            saveStatus.value = 'saved';
             alert("ออกจากระบบเรียบร้อยแล้ว");
           } catch (e) {
             console.error("Logout Error:", e);
@@ -1041,6 +1177,28 @@
           updateExamTimer();
           timerInterval = setInterval(updateExamTimer, 1000);
           generateAutoNotifications();
+
+          // Session persistence with Firebase Auth & Remote real-time sync
+          onAuthStateChanged(auth, (u) => {
+            if (u) {
+              user.value = u;
+              onSnapshot(doc(db, "users", u.uid), (docSnap) => {
+                if (docSnap.exists()) {
+                  const data = docSnap.data();
+                  if (data.semesterData) semesterData.value = data.semesterData;
+                  if (data.gpaxInput) gpaxInput.value = data.gpaxInput;
+                  if (data.streakCount !== undefined) streakCount.value = data.streakCount;
+                  if (data.focusSessionsCompleted !== undefined) focusSessionsCompleted.value = data.focusSessionsCompleted;
+                }
+                setTimeout(() => { isInitialSyncing = false; }, 300);
+              }, (err) => {
+                console.warn("Firestore snapshot warning:", err);
+                setTimeout(() => { isInitialSyncing = false; }, 300);
+              });
+            } else {
+              setTimeout(() => { isInitialSyncing = false; }, 300);
+            }
+          });
         });
         onUnmounted(() => clearInterval(timerInterval));
 
@@ -1054,6 +1212,8 @@
           sortedTasks, topPriorityTasks, sortedExams, nextExam, examTimer, isFocusMode, focusTime, focusTimerDisplay,
           isFocusRunning, focusSessionsCompleted, requestNotificationPermission, toggleFocusTimer, resetFocusTimer, getScheduleForDay, getCourseCode,
           getExamStatusBadge, getPriorityBadgeClass, getDeadlineLabel, openCourseDetail, openCourseDetailByCourseId,
+          saveStatus, lastSavedTime, saveStatusTitle, forceSave,
+          deleteCourse, deleteExam,
           addCourse, addExam, addTask, completeTask, deleteTask, toggleDarkMode, openUploadModal, closeUploadModal, handleFileUpload, cancelScanning, processScanWithGemini, loginWithGoogle, logout
         };
       }
