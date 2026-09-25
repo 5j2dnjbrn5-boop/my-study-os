@@ -3,7 +3,10 @@
 <head>
   <meta charset="UTF-8">
   <meta name="viewport" content="width=device-width, initial-scale=1.0">
-  <title>STUDY OS // ULTIMATE ACADEMIC OPERATING SYSTEM</title>
+  <title>STUDY OS</title>
+  <meta name="description" content="Academic Operating System with schedule management, exam countdown, task tracking, GPAX calculator, focus mode, and AI schedule scanning.">
+  <meta property="og:title" content="STUDY OS">
+  <meta property="og:description" content="Academic Operating System with schedule management, exam countdown, task tracking, GPAX calculator, focus mode, and AI schedule scanning.">
   
   <!-- Tailwind CSS & Custom Config -->
   <script src="https://cdn.tailwindcss.com"></script>
@@ -45,94 +48,121 @@
 
   <div id="app" class="max-w-4xl mx-auto p-4 md:p-6 space-y-5">
     
-    <!-- 1. TOP BAR / HEADER -->
-    <header class="flex justify-between items-center bg-app-card dark:bg-app-darkCard p-4 rounded-2xl border border-app-border dark:border-app-darkBorder shadow-sm">
-      <div class="flex items-center gap-3">
-        <div v-if="user" class="relative group">
-          <img :src="user.photoURL" class="w-10 h-10 rounded-xl border border-app-border dark:border-app-darkBorder">
-          <button @click="logout" title="ออกจากระบบ" class="absolute -bottom-1 -right-1 bg-red-500 text-white rounded-full w-4 h-4 text-[9px] flex items-center justify-center shadow hover:bg-red-600 transition"><i class="fa-solid fa-power-off"></i></button>
-        </div>
-        <button v-else @click="loginWithGoogle" class="w-10 h-10 bg-app-accent dark:bg-app-accentDark text-white dark:text-slate-900 rounded-xl flex items-center justify-center font-bold text-sm shadow">
-          <i class="fa-brands fa-google"></i>
-        </button>
-        
-        <div>
-          <div class="flex items-center gap-2 flex-wrap sm:flex-nowrap">
-            <h1 class="font-bold text-base leading-tight">{{ user ? user.displayName : 'STUDY OS' }}</h1>
-            <select v-model="selectedSemester" class="bg-slate-100 dark:bg-slate-800 border border-app-border dark:border-app-darkBorder rounded-lg px-2 py-0.5 text-xs font-semibold outline-none">
-              <option value="1/2569">เทอม 1/2569</option>
-              <option value="2/2569">เทอม 2/2569</option>
-            </select>
-
-            <!-- REAL-TIME CLOUD AUTO-SAVE INDICATOR (ไอคอนก้อนเมฆเล็กๆ แสดงสถานะการบันทึก) -->
-            <button @click="forceSave"
-                    :title="saveStatusTitle"
-                    class="inline-flex items-center gap-1.5 px-2.5 py-0.5 rounded-lg text-xs font-medium transition-all duration-300 border cursor-pointer select-none"
-                    :class="{
-                      'bg-emerald-50 dark:bg-emerald-950/40 text-emerald-700 dark:text-emerald-300 border-emerald-200 dark:border-emerald-800/70 shadow-xs hover:bg-emerald-100 dark:hover:bg-emerald-900/40': saveStatus === 'saved',
-                      'bg-amber-50 dark:bg-amber-950/40 text-amber-700 dark:text-amber-300 border-amber-200 dark:border-amber-800/70 animate-pulse': saveStatus === 'saving',
-                      'bg-rose-50 dark:bg-rose-950/40 text-rose-700 dark:text-rose-300 border-rose-200 dark:border-rose-800/70 hover:bg-rose-100 dark:hover:bg-rose-900/40': saveStatus === 'error'
-                    }">
-              <!-- Saving state: small cloud arrow bouncing -->
-              <span v-if="saveStatus === 'saving'" class="flex items-center gap-1">
-                <i class="fa-solid fa-cloud-arrow-up text-amber-500 text-xs animate-bounce"></i>
-                <span class="text-[10px] hidden sm:inline font-semibold">กำลังเซฟ...</span>
-              </span>
-              <!-- Saved state: small cloud with check icon -->
-              <span v-else-if="saveStatus === 'saved'" class="flex items-center gap-1">
-                <span class="relative inline-flex items-center justify-center">
-                  <i class="fa-solid fa-cloud text-emerald-500 text-xs"></i>
-                  <i class="fa-solid fa-check text-[7px] text-white absolute font-black -mt-0.5"></i>
-                </span>
-                <span class="text-[10px] hidden sm:inline font-semibold">เซฟแล้ว</span>
-              </span>
-              <!-- Error state: small cloud with exclamation -->
-              <span v-else class="flex items-center gap-1">
-                <i class="fa-solid fa-cloud text-rose-500 text-xs"></i>
-                <i class="fa-solid fa-triangle-exclamation text-[8px] text-rose-500"></i>
-                <span class="text-[10px] hidden sm:inline font-semibold">เซฟไม่สำเร็จ</span>
-              </span>
-            </button>
+    <!-- 1. TOP BAR / SYSTEM HEADER -->
+    <header class="bg-app-card dark:bg-app-darkCard p-4 rounded-2xl border border-app-border dark:border-app-darkBorder shadow-sm space-y-2.5">
+      <div class="flex flex-wrap items-center justify-between gap-3">
+        <div class="flex items-center gap-3">
+          <div v-if="user" class="relative group">
+            <img :src="user.photoURL" class="w-10 h-10 rounded-xl border border-app-border dark:border-app-darkBorder">
+            <button @click="logout" title="ออกจากระบบ" class="absolute -bottom-1 -right-1 bg-red-500 text-white rounded-full w-4 h-4 text-[9px] flex items-center justify-center shadow hover:bg-red-600 transition"><i class="fa-solid fa-power-off"></i></button>
           </div>
-          <p class="text-xs text-slate-400 font-medium flex items-center gap-1.5 mt-0.5">
-            <span>🔥 Streak: {{ streakCount }} วัน</span>
-            <span>•</span>
-            <span>GPAX: {{ calculatedGPAX.toFixed(2) }}</span>
-            <span class="hidden sm:inline text-slate-300 dark:text-slate-600">•</span>
-            <span class="hidden sm:inline text-[10px] text-slate-400" :title="'เวลาบันทึกล่าสุด: ' + lastSavedTime">
-              <i class="fa-solid fa-cloud mr-0.5 text-slate-400 text-[9px]"></i> {{ lastSavedTime }}
-            </span>
-          </p>
-        </div>
-      </div>
-      
-      <div class="flex items-center gap-2">
-        <!-- FOCUS MODE TRIGGER BUTTON -->
-        <button @click="isFocusMode = true" class="px-3 py-1.5 bg-rose-600 hover:bg-rose-700 text-white text-xs font-bold rounded-xl shadow flex items-center gap-1.5 transition">
-          <i class="fa-solid fa-stopwatch"></i>
-          <span class="hidden sm:inline">Focus Mode</span>
-        </button>
-
-        <!-- DESKTOP QUICK ADD BUTTON & MENU -->
-        <div class="relative hidden md:block">
-          <button @click="showQuickAddMenu = !showQuickAddMenu" class="px-3 py-1.5 bg-slate-900 dark:bg-white text-white dark:text-slate-900 text-xs font-bold rounded-xl shadow flex items-center gap-1">
-            <i class="fa-solid fa-plus"></i> เพิ่มข้อมูล
+          <button v-else @click="loginWithGoogle" class="w-10 h-10 bg-app-accent dark:bg-app-accentDark text-white dark:text-slate-900 rounded-xl flex items-center justify-center font-bold text-sm shadow">
+            <i class="fa-brands fa-google"></i>
           </button>
-          <div v-if="showQuickAddMenu" class="absolute right-0 mt-2 w-48 bg-app-card dark:bg-app-darkCard border border-app-border dark:border-app-darkBorder rounded-xl shadow-xl p-2 z-50 text-xs font-semibold space-y-1">
-            <button @click="openUploadModal" class="w-full text-left px-3 py-2 hover:bg-slate-100 dark:hover:bg-slate-800 rounded-lg flex items-center gap-2 text-indigo-600 dark:text-indigo-400"><i class="fa-solid fa-wand-magic-sparkles"></i> AI สแกนเอกสาร</button>
-            <button @click="activeTab = 'tasks'; showQuickAddMenu = false" class="w-full text-left px-3 py-2 hover:bg-slate-100 dark:hover:bg-slate-800 rounded-lg flex items-center gap-2"><i class="fa-solid fa-check-square"></i> เพิ่มการบ้าน / งาน</button>
-            <button @click="showAddCourseModal = true; showQuickAddMenu = false" class="w-full text-left px-3 py-2 hover:bg-slate-100 dark:hover:bg-slate-800 rounded-lg flex items-center gap-2"><i class="fa-solid fa-book"></i> เพิ่มรายวิชาใหม่</button>
-            <button @click="showAddExamModal = true; showQuickAddMenu = false" class="w-full text-left px-3 py-2 hover:bg-slate-100 dark:hover:bg-slate-800 rounded-lg flex items-center gap-2"><i class="fa-solid fa-file-pen"></i> เพิ่มกำหนดการสอบ</button>
+          
+          <div>
+            <div class="flex items-center gap-2 flex-wrap">
+              <div class="flex items-center gap-1.5">
+                <span class="font-black text-sm md:text-base tracking-tight font-mono">STUDY OS</span>
+                <span class="text-xs text-slate-400 font-medium">| {{ user ? user.displayName : 'First' }}</span>
+              </div>
+              
+              <!-- 4-YEAR ACADEMIC SEMESTER SWITCHER (ปี 1 - ปี 4) -->
+              <div class="flex items-center gap-1">
+                <select v-model="selectedSemester" class="bg-slate-100 dark:bg-slate-800 border border-app-border dark:border-app-darkBorder rounded-lg px-2 py-0.5 text-xs font-semibold outline-none text-indigo-600 dark:text-indigo-400">
+                  <optgroup label="🎓 ปี 1 (Year 1)">
+                    <option value="1/2567">ปี 1 เทอม 1 (1/2567)</option>
+                    <option value="2/2567">ปี 1 เทอม 2 (2/2567)</option>
+                  </optgroup>
+                  <optgroup label="🎓 ปี 2 (Year 2)">
+                    <option value="1/2568">ปี 2 เทอม 1 (1/2568)</option>
+                    <option value="2/2568">ปี 2 เทอม 2 (2/2568)</option>
+                  </optgroup>
+                  <optgroup label="🎓 ปี 3 (Year 3 - ปัจจุบัน)">
+                    <option value="1/2569">ปี 3 เทอม 1 (1/2569)</option>
+                    <option value="2/2569">ปี 3 เทอม 2 (2/2569)</option>
+                  </optgroup>
+                  <optgroup label="🎓 ปี 4 (Year 4)">
+                    <option value="1/2570">ปี 4 เทอม 1 (1/2570)</option>
+                    <option value="2/2570">ปี 4 เทอม 2 (2/2570)</option>
+                  </optgroup>
+                </select>
+              </div>
+
+              <!-- 30-SECOND BATCH AUTO-SAVE INDICATOR -->
+              <button @click="forceSave"
+                      :title="saveStatusTitle"
+                      class="inline-flex items-center gap-1.5 px-2.5 py-0.5 rounded-lg text-xs font-medium transition-all duration-300 border cursor-pointer select-none"
+                      :class="{
+                        'bg-emerald-50 dark:bg-emerald-950/40 text-emerald-700 dark:text-emerald-300 border-emerald-200 dark:border-emerald-800/70 shadow-xs hover:bg-emerald-100 dark:hover:bg-emerald-900/40': saveStatus === 'saved' && !hasPendingChanges,
+                        'bg-amber-50 dark:bg-amber-950/40 text-amber-700 dark:text-amber-300 border-amber-200 dark:border-amber-800/70 hover:bg-amber-100 dark:hover:bg-amber-900/40': hasPendingChanges && saveStatus !== 'saving',
+                        'bg-indigo-50 dark:bg-indigo-950/40 text-indigo-700 dark:text-indigo-300 border-indigo-200 dark:border-indigo-800/70 animate-pulse': saveStatus === 'saving',
+                        'bg-rose-50 dark:bg-rose-950/40 text-rose-700 dark:text-rose-300 border-rose-200 dark:border-rose-800/70 hover:bg-rose-100 dark:hover:bg-rose-900/40': saveStatus === 'error'
+                      }">
+                <span v-if="saveStatus === 'saving'" class="flex items-center gap-1">
+                  <i class="fa-solid fa-cloud-arrow-up text-indigo-500 text-xs animate-bounce"></i>
+                  <span class="text-[10px] hidden sm:inline font-semibold">กำลังเซฟ...</span>
+                </span>
+                <span v-else-if="hasPendingChanges" class="flex items-center gap-1">
+                  <i class="fa-solid fa-clock-rotate-left text-amber-500 text-xs"></i>
+                  <span class="text-[10px] font-semibold">เซฟใน {{ secondsUntilNextSave }}s</span>
+                </span>
+                <span v-else-if="saveStatus === 'saved'" class="flex items-center gap-1">
+                  <span class="relative inline-flex items-center justify-center">
+                    <i class="fa-solid fa-cloud text-emerald-500 text-xs"></i>
+                    <i class="fa-solid fa-check text-[7px] text-white absolute font-black -mt-0.5"></i>
+                  </span>
+                  <span class="text-[10px] hidden sm:inline font-semibold">เซฟแล้ว (30s)</span>
+                </span>
+                <span v-else class="flex items-center gap-1">
+                  <i class="fa-solid fa-cloud text-rose-500 text-xs"></i>
+                  <i class="fa-solid fa-triangle-exclamation text-[8px] text-rose-500"></i>
+                  <span class="text-[10px] hidden sm:inline font-semibold">เซฟไม่สำเร็จ</span>
+                </span>
+              </button>
+            </div>
+            <div class="flex items-center gap-2 text-[11px] text-slate-400 font-mono mt-1">
+              <span class="text-emerald-500 font-bold flex items-center gap-1"><span class="w-1.5 h-1.5 rounded-full bg-emerald-500 animate-pulse"></span>SYSTEM STATUS: ● ALL SYSTEMS NORMAL</span>
+              <span class="hidden sm:inline">•</span>
+              <span class="hidden sm:inline">STREAK: {{ streakCount }} DAYS</span>
+            </div>
           </div>
         </div>
+        
+        <div class="flex items-center gap-2">
+          <!-- FOCUS MODE TRIGGER BUTTON -->
+          <button @click="isFocusMode = true" class="px-3 py-1.5 bg-rose-600 hover:bg-rose-700 text-white text-xs font-bold rounded-xl shadow flex items-center gap-1.5 transition">
+            <i class="fa-solid fa-stopwatch"></i>
+            <span class="hidden sm:inline">Focus</span>
+          </button>
 
-        <button @click="requestNotificationPermission" class="w-9 h-9 rounded-xl border border-app-border dark:border-app-darkBorder bg-slate-100 dark:bg-slate-800 text-slate-600 dark:text-slate-300 flex items-center justify-center relative">
-          <i class="fa-solid fa-bell"></i>
-          <span v-if="autoNotifications.length > 0" class="absolute -top-1 -right-1 w-2.5 h-2.5 bg-red-500 rounded-full animate-pulse"></span>
-        </button>
-        <button @click="toggleDarkMode" class="w-9 h-9 rounded-xl border border-app-border dark:border-app-darkBorder bg-slate-100 dark:bg-slate-800 text-slate-600 dark:text-slate-300 flex items-center justify-center">
-          <i class="fa-solid" :class="isDarkMode ? 'fa-sun text-amber-400' : 'fa-moon'"></i>
-        </button>
+          <!-- AI SCAN QUICK BUTTON -->
+          <button @click="openUploadModal" class="px-3 py-1.5 bg-indigo-600 hover:bg-indigo-700 text-white text-xs font-bold rounded-xl shadow flex items-center gap-1.5 transition">
+            <i class="fa-solid fa-wand-magic-sparkles"></i>
+            <span class="hidden sm:inline">+ AI SCAN</span>
+          </button>
+
+          <!-- DESKTOP QUICK ADD BUTTON & MENU -->
+          <div class="relative hidden md:block">
+            <button @click="showQuickAddMenu = !showQuickAddMenu" class="px-3 py-1.5 bg-slate-900 dark:bg-white text-white dark:text-slate-900 text-xs font-bold rounded-xl shadow flex items-center gap-1">
+              <i class="fa-solid fa-plus"></i> เพิ่ม
+            </button>
+            <div v-if="showQuickAddMenu" class="absolute right-0 mt-2 w-48 bg-app-card dark:bg-app-darkCard border border-app-border dark:border-app-darkBorder rounded-xl shadow-xl p-2 z-50 text-xs font-semibold space-y-1">
+              <button @click="openUploadModal" class="w-full text-left px-3 py-2 hover:bg-slate-100 dark:hover:bg-slate-800 rounded-lg flex items-center gap-2 text-indigo-600 dark:text-indigo-400"><i class="fa-solid fa-wand-magic-sparkles"></i> + AI Scan (ตาราง/สอบ)</button>
+              <button @click="activeTab = 'tasks'; showQuickAddMenu = false" class="w-full text-left px-3 py-2 hover:bg-slate-100 dark:hover:bg-slate-800 rounded-lg flex items-center gap-2"><i class="fa-solid fa-check-square"></i> เพิ่มงาน / Assignment</button>
+              <button @click="showAddCourseModal = true; showQuickAddMenu = false" class="w-full text-left px-3 py-2 hover:bg-slate-100 dark:hover:bg-slate-800 rounded-lg flex items-center gap-2"><i class="fa-solid fa-book"></i> เพิ่มรายวิชา (Course)</button>
+              <button @click="showAddExamModal = true; showQuickAddMenu = false" class="w-full text-left px-3 py-2 hover:bg-slate-100 dark:hover:bg-slate-800 rounded-lg flex items-center gap-2"><i class="fa-solid fa-file-pen"></i> เพิ่มกำหนดการสอบ (Exam)</button>
+            </div>
+          </div>
+
+          <button @click="requestNotificationPermission" class="w-9 h-9 rounded-xl border border-app-border dark:border-app-darkBorder bg-slate-100 dark:bg-slate-800 text-slate-600 dark:text-slate-300 flex items-center justify-center relative">
+            <i class="fa-solid fa-bell"></i>
+            <span v-if="autoNotifications.length > 0" class="absolute -top-1 -right-1 w-2.5 h-2.5 bg-red-500 rounded-full animate-pulse"></span>
+          </button>
+          <button @click="toggleDarkMode" class="w-9 h-9 rounded-xl border border-app-border dark:border-app-darkBorder bg-slate-100 dark:bg-slate-800 text-slate-600 dark:text-slate-300 flex items-center justify-center">
+            <i class="fa-solid" :class="isDarkMode ? 'fa-sun text-amber-400' : 'fa-moon'"></i>
+          </button>
+        </div>
       </div>
     </header>
 
@@ -156,251 +186,803 @@
 
     <!-- TAB 1: 🏠 TODAY (DASHBOARD) -->
     <main v-if="activeTab === 'today'" class="space-y-4">
-      <div class="space-y-1">
-        <h2 class="text-lg md:text-xl font-bold tracking-tight">TODAY OVERVIEW 🏠</h2>
-        <p class="text-xs text-slate-500 font-medium">{{ fullFormattedDate }}</p>
-      </div>
-
-      <!-- STREAK & TREE GROWTH WIDGET -->
-      <section class="bg-gradient-to-r from-emerald-500/10 via-green-500/10 to-teal-500/10 border border-emerald-500/20 p-4 rounded-2xl shadow-sm flex items-center justify-between">
-        <div class="space-y-1">
-          <div class="flex items-center gap-2">
-            <span class="text-2xl">{{ treeStage.emoji }}</span>
-            <div>
-              <h3 class="font-bold text-sm text-emerald-900 dark:text-emerald-300">ต้นไม้แห่งการเรียนรู้ (Level {{ treeStage.level }})</h3>
-              <p class="text-xs text-emerald-700 dark:text-emerald-400 font-medium">{{ treeStage.name }} • Streak {{ streakCount }} วัน</p>
-            </div>
-          </div>
-          <p class="text-[11px] text-slate-500 dark:text-slate-400 mt-1">
-            <span v-if="streakCount % 5 === 0 && streakCount > 0">🎉 ยินดีด้วย! ครบ {{ streakCount }} สตรีค ต้นไม้โตขึ้นอีกขั้นแล้ว!</span>
-            <span v-else>ทำภารกิจหรือเช็คอินต่ออีก {{ 5 - (streakCount % 5) }} วัน เพื่อให้ต้นไม้เติบโตขึ้น!</span>
-          </p>
-        </div>
-        <button @click="incrementStreak" class="px-3 py-2 bg-emerald-600 hover:bg-emerald-500 text-white rounded-xl text-xs font-bold shadow flex items-center gap-1 shrink-0 transition">
-          <i class="fa-solid fa-fire"></i> เช็คอิน Streak
-        </button>
-      </section>
-
-      <!-- TODAY's SCHEDULE TIMELINE WIDGET -->
-      <section class="bg-app-card dark:bg-app-darkCard p-4 rounded-2xl border border-app-border dark:border-app-darkBorder shadow-sm space-y-3">
-        <h3 class="font-bold text-xs md:text-sm text-slate-700 dark:text-slate-200 flex items-center gap-2">
-          <i class="fa-solid fa-calendar-day text-blue-500"></i> ตารางเรียนวันนี้ ({{ currentDayName }})
-        </h3>
-        <div v-if="todayScheduleList.length > 0" class="space-y-2">
-          <div v-for="item in todayScheduleList" :key="item.id" class="p-3 bg-blue-50/50 dark:bg-blue-950/30 border border-blue-200 dark:border-blue-900/50 rounded-xl flex justify-between items-center">
-            <div class="flex items-center gap-3">
-              <span class="text-xs font-mono font-bold px-2 py-1 bg-blue-600 text-white rounded-lg">{{ item.schedule.start }} - {{ item.schedule.end }}</span>
-              <div>
-                <p class="font-bold text-xs md:text-sm">{{ item.code }}: {{ item.name }}</p>
-                <p class="text-[11px] text-slate-400"><i class="fa-solid fa-location-dot mr-1"></i>ห้อง {{ item.schedule.room }} • {{ item.instructor }}</p>
-              </div>
-            </div>
-          </div>
-        </div>
-        <p v-else class="text-slate-400 text-xs text-center py-4 bg-slate-50 dark:bg-slate-800/40 rounded-xl">🎉 วันนี้ไม่มีคาบเรียน พักผ่อนให้เต็มที่!</p>
-      </section>
-
-      <!-- HIGH PRIORITY TASKS WIDGET -->
-      <section class="bg-app-card dark:bg-app-darkCard p-4 rounded-2xl border border-app-border dark:border-app-darkBorder shadow-sm space-y-3">
-        <div class="flex justify-between items-center">
-          <h3 class="font-bold text-xs md:text-sm text-red-600 dark:text-red-400 flex items-center gap-2">
-            <span class="w-2 h-2 rounded-full bg-red-500 animate-ping"></span> 🔴 งานด่วนที่สุด (High Priority)
-          </h3>
-          <button @click="activeTab = 'tasks'" class="text-xs text-app-accent font-semibold">ดูทั้งหมด →</button>
-        </div>
-
-        <div v-if="topPriorityTasks.length > 0" class="space-y-2">
-          <div v-for="task in topPriorityTasks" :key="task.id" class="p-3 bg-red-50/50 dark:bg-red-950/20 border border-red-200 dark:border-red-900/40 rounded-xl flex items-center justify-between">
-            <div class="flex items-center gap-3">
-              <input type="checkbox" v-model="task.completed" @change="completeTask(task)" class="w-4 h-4 accent-red-600 cursor-pointer">
-              <div>
-                <p class="font-bold text-xs md:text-sm">{{ task.title }} <span class="text-[10px] bg-red-200 dark:bg-red-900 text-red-800 dark:text-red-200 px-1.5 py-0.5 rounded ml-1">{{ getCourseCode(task.courseId) }}</span></p>
-                <p class="text-[11px] text-red-600 dark:text-red-400 font-medium"><i class="fa-regular fa-clock mr-1"></i>{{ getDeadlineLabel(task.deadline) }}</p>
-              </div>
-            </div>
-          </div>
-        </div>
-        <p v-else class="text-slate-400 text-xs text-center py-3">🎉 ไม่มีงานด่วนระดับ High Priority</p>
-      </section>
-
-      <!-- EXAM COUNTDOWN WIDGET -->
-      <section v-if="nextExam" class="bg-slate-900 text-white dark:bg-slate-800 p-5 rounded-2xl shadow-sm space-y-3">
-        <div class="flex justify-between items-center">
+      <!-- GREETING & NEXT CLASS STATUS HEADER -->
+      <section class="bg-gradient-to-r from-indigo-900 via-slate-900 to-slate-950 text-white p-5 rounded-3xl shadow-md relative overflow-hidden">
+        <div class="absolute -right-6 -bottom-6 w-36 h-36 bg-indigo-500/10 rounded-full blur-2xl pointer-events-none"></div>
+        <div class="flex flex-col md:flex-row md:items-center md:justify-between gap-3 relative z-10">
           <div>
-            <span class="text-[10px] font-bold px-2 py-0.5 rounded bg-amber-400 text-slate-900">⏱ สอบถัดไป</span>
-            <h3 class="font-bold text-base mt-1">{{ nextExam.title }} ({{ getCourseCode(nextExam.courseId) }})</h3>
+            <div class="flex items-center gap-2">
+              <h2 class="text-xl md:text-2xl font-black tracking-tight font-mono">{{ greetingMessage }}, {{ user ? user.displayName : 'First' }} 👋</h2>
+              <span class="px-2 py-0.5 rounded-md text-[10px] font-mono font-bold bg-indigo-500/30 text-indigo-200 border border-indigo-400/30">
+                Semester {{ selectedSemester }}
+              </span>
+            </div>
+            <p class="text-xs text-slate-300 mt-1 flex items-center gap-2">
+              <i class="fa-regular fa-calendar text-indigo-400"></i>
+              <span>{{ fullFormattedDate }}</span>
+              <span>•</span>
+              <span class="font-mono text-emerald-400">● STUDY OS ONLINE</span>
+            </p>
           </div>
-          <span :class="getExamStatusBadge(nextExam.date).color" class="text-xs font-bold px-2.5 py-1 rounded-full">
-            {{ getExamStatusBadge(nextExam.date).label }}
-          </span>
+
+          <!-- DYNAMIC NEXT CLASS / CLASS STATUS PILL -->
+          <div class="px-3.5 py-2 rounded-2xl bg-white/10 backdrop-blur-md border border-white/15 flex items-center gap-2.5">
+            <div class="w-8 h-8 rounded-xl bg-indigo-500/30 flex items-center justify-center text-indigo-300 text-sm">
+              <i class="fa-solid fa-clock"></i>
+            </div>
+            <div>
+              <p class="text-[10px] font-bold uppercase tracking-wider text-indigo-300">Class Status</p>
+              <p class="text-xs font-bold leading-tight text-white">{{ nextClassStatusMessage }}</p>
+            </div>
+          </div>
+        </div>
+      </section>
+
+      <!-- 2-COLUMN DASHBOARD GRID: TODAY TIMETABLE & UPCOMING + EXAM COUNTDOWN -->
+      <div class="grid grid-cols-1 md:grid-cols-12 gap-4">
+        
+        <!-- LEFT COLUMN (md:col-span-7): TODAY SCHEDULE TABLE -->
+        <div class="md:col-span-7 space-y-4">
+          <section class="bg-app-card dark:bg-app-darkCard p-5 rounded-2xl border border-app-border dark:border-app-darkBorder shadow-sm space-y-3.5">
+            <div class="flex items-center justify-between border-b dark:border-slate-800 pb-2.5">
+              <div>
+                <span class="text-[10px] font-mono uppercase tracking-widest text-indigo-600 dark:text-indigo-400 font-bold">Today's Timetable</span>
+                <h3 class="font-black text-sm md:text-base text-slate-800 dark:text-slate-100 flex items-center gap-2">
+                  <i class="fa-solid fa-calendar-day text-indigo-500"></i> {{ currentDayName }} • {{ todayFormattedShort }}
+                </h3>
+              </div>
+              <button @click="activeTab = 'schedule'" class="text-xs text-indigo-600 dark:text-indigo-400 font-semibold hover:underline">
+                ตารางเต็ม (3 Views) →
+              </button>
+            </div>
+
+            <!-- TODAY'S SCHEDULE TIMELINE TABLE -->
+            <div v-if="todayScheduleList.length > 0" class="overflow-x-auto">
+              <table class="w-full text-xs">
+                <thead>
+                  <tr class="text-left text-slate-400 border-b dark:border-slate-800 pb-2">
+                    <th class="py-2 font-mono uppercase text-[10px]">เวลา</th>
+                    <th class="py-2 font-mono uppercase text-[10px]">รายการวิชา</th>
+                    <th class="py-2 font-mono uppercase text-[10px]">ห้อง / ผู้สอน</th>
+                  </tr>
+                </thead>
+                <tbody class="divide-y dark:divide-slate-800">
+                  <tr v-for="item in todayScheduleList" :key="item.id" @click="openCourseDetailByCourseId(item.courseId)" class="hover:bg-slate-50 dark:hover:bg-slate-800/50 cursor-pointer transition">
+                    <td class="py-3 font-mono font-bold text-indigo-600 dark:text-indigo-400 whitespace-nowrap">
+                      {{ item.schedule.start }}–{{ item.schedule.end }}
+                    </td>
+                    <td class="py-3 font-bold pr-2">
+                      <div class="flex items-center gap-1.5">
+                        <span class="px-1.5 py-0.5 rounded bg-blue-100 text-blue-800 dark:bg-blue-950 dark:text-blue-300 font-mono text-[10px]">{{ item.code }}</span>
+                        <span class="truncate">{{ item.name }}</span>
+                      </div>
+                    </td>
+                    <td class="py-3 text-slate-500 dark:text-slate-400 whitespace-nowrap">
+                      <i class="fa-solid fa-location-dot text-slate-400 mr-1"></i>{{ item.schedule.room || '-' }}
+                    </td>
+                  </tr>
+                </tbody>
+              </table>
+            </div>
+            <div v-else class="text-center py-6 bg-slate-50 dark:bg-slate-800/40 rounded-xl space-y-1">
+              <p class="text-xs font-bold text-slate-600 dark:text-slate-300">🎉 วันนี้ไม่มีคาบเรียน</p>
+              <p class="text-[11px] text-slate-400">ใช้เวลาพักผ่อน ทบทวนเนื้อหา หรือเคลียร์การบ้าน</p>
+            </div>
+          </section>
+
+          <!-- STREAK & TREE GROWTH WIDGET -->
+          <section class="bg-gradient-to-r from-emerald-500/10 via-green-500/10 to-teal-500/10 border border-emerald-500/20 p-4 rounded-2xl shadow-sm flex items-center justify-between">
+            <div class="space-y-1">
+              <div class="flex items-center gap-2">
+                <span class="text-2xl">{{ treeStage.emoji }}</span>
+                <div>
+                  <h3 class="font-bold text-sm text-emerald-900 dark:text-emerald-300">ต้นไม้แห่งการเรียนรู้ (Level {{ treeStage.level }})</h3>
+                  <p class="text-xs text-emerald-700 dark:text-emerald-400 font-medium">{{ treeStage.name }} • Streak {{ streakCount }} วัน</p>
+                </div>
+              </div>
+              <p class="text-[11px] text-slate-500 dark:text-slate-400">
+                <span v-if="streakCount % 5 === 0 && streakCount > 0">🎉 ยินดีด้วย! ครบ {{ streakCount }} สตรีค ต้นไม้โตขึ้นอีกขั้นแล้ว!</span>
+                <span v-else>เช็คอินต่ออีก {{ 5 - (streakCount % 5) }} วัน เพื่อให้ต้นไม้เติบโตขึ้น</span>
+              </p>
+            </div>
+            <button @click="incrementStreak" 
+                    :class="isCheckedInToday ? 'bg-emerald-100 dark:bg-emerald-950/70 text-emerald-800 dark:text-emerald-300 border border-emerald-300 dark:border-emerald-800 shadow-none' : 'bg-emerald-600 hover:bg-emerald-500 text-white shadow hover:scale-105 animate-pulse cursor-pointer'"
+                    class="px-3 py-2 rounded-xl text-xs font-bold flex items-center gap-1.5 shrink-0 transition select-none"
+                    :title="isCheckedInToday ? 'เช็คอินประจำวันนี้แล้ว (จำกัดวันละ 1 ครั้ง)' : 'คลิกเพื่อเช็คอิน Streak ประจำวัน'">
+              <i class="fa-solid" :class="isCheckedInToday ? 'fa-circle-check text-emerald-600 dark:text-emerald-400' : 'fa-fire text-amber-300'"></i>
+              <span>{{ isCheckedInToday ? 'เช็คอินแล้ว' : 'เช็คอิน Streak' }}</span>
+            </button>
+          </section>
         </div>
 
-        <div class="grid grid-cols-4 gap-2 text-center py-2 bg-slate-800/80 dark:bg-slate-900/80 rounded-xl border border-slate-700">
-          <div><p class="text-xl md:text-2xl font-black font-mono text-amber-400">{{ examTimer.days }}</p><p class="text-[10px] text-slate-400">วัน</p></div>
-          <div><p class="text-xl md:text-2xl font-black font-mono">{{ examTimer.hours }}</p><p class="text-[10px] text-slate-400">ชม.</p></div>
-          <div><p class="text-xl md:text-2xl font-black font-mono">{{ examTimer.minutes }}</p><p class="text-[10px] text-slate-400">นาที</p></div>
-          <div><p class="text-xl md:text-2xl font-black font-mono text-sky-400">{{ examTimer.seconds }}</p><p class="text-[10px] text-slate-400">วินาที</p></div>
+        <!-- RIGHT COLUMN (md:col-span-5): UPCOMING & EXAM HIGHLIGHT -->
+        <div class="md:col-span-5 space-y-4">
+          <!-- 🔥 UPCOMING CARD (ASSIGNMENTS & EXAMS COMING UP) -->
+          <section class="bg-app-card dark:bg-app-darkCard p-4 rounded-2xl border border-app-border dark:border-app-darkBorder shadow-sm space-y-3">
+            <div class="flex items-center justify-between border-b dark:border-slate-800 pb-2">
+              <h3 class="font-bold text-xs md:text-sm text-slate-800 dark:text-slate-100 flex items-center gap-2">
+                <span class="text-amber-500 font-bold">🔥</span> Upcoming
+              </h3>
+              <button @click="activeTab = 'tasks'" class="text-[11px] text-app-accent font-semibold hover:underline">จัดการงาน →</button>
+            </div>
+
+            <div v-if="upcomingItems.length > 0" class="space-y-2">
+              <div v-for="item in upcomingItems" :key="item.id" class="p-2.5 rounded-xl border transition flex items-start gap-2.5"
+                   :class="item.type === 'exam' ? 'bg-rose-50/60 dark:bg-rose-950/20 border-rose-200 dark:border-rose-900/50' : 'bg-slate-50 dark:bg-slate-800/50 border-slate-200 dark:border-slate-700'">
+                <div class="w-6 h-6 rounded-lg flex items-center justify-center text-xs shrink-0 mt-0.5"
+                     :class="item.type === 'exam' ? 'bg-rose-500 text-white' : 'bg-indigo-100 dark:bg-indigo-900/70 text-indigo-600 dark:text-indigo-300'">
+                  <i :class="item.icon"></i>
+                </div>
+                <div class="min-w-0 flex-1">
+                  <div class="flex items-center justify-between gap-1">
+                    <h4 class="font-bold text-xs truncate">{{ item.title }}</h4>
+                    <span class="text-[10px] font-bold shrink-0" :class="item.badgeColor">{{ item.dueLabel }}</span>
+                  </div>
+                  <p class="text-[10px] text-slate-400 mt-0.5">
+                    <span class="font-mono text-slate-500 dark:text-slate-300">{{ item.courseCode }}</span> • {{ item.subtitle }}
+                  </p>
+                </div>
+              </div>
+            </div>
+            <p v-else class="text-slate-400 text-xs text-center py-4 bg-slate-50 dark:bg-slate-800/40 rounded-xl">ไม่มีกำหนดการด่วนใน 14 วันข้างหน้า</p>
+          </section>
+
+          <!-- EXAM COUNTDOWN CARD (TERMINAL MINIMAL OS STYLE) -->
+          <section v-if="nextExam" class="bg-slate-900 text-white dark:bg-slate-950 p-4 rounded-2xl border border-slate-800 shadow-md space-y-2.5 font-mono">
+            <div class="flex justify-between items-center text-[10px] text-slate-400 border-b border-slate-800 pb-1.5">
+              <span class="text-amber-400 font-bold uppercase tracking-wider">⏳ EXAM COUNTDOWN</span>
+              <span>{{ getCourseCode(nextExam.courseId) }}</span>
+            </div>
+            <div>
+              <h4 class="font-bold text-sm text-white">{{ nextExam.title }}</h4>
+              <p class="text-[10px] text-slate-400 mt-0.5">
+                <i class="fa-solid fa-location-dot mr-1"></i>ห้อง {{ nextExam.room || '-' }} • {{ new Date(nextExam.date).toLocaleString('th-TH', { dateStyle: 'short', timeStyle: 'short' }) }}
+              </p>
+            </div>
+            
+            <div class="grid grid-cols-4 gap-1.5 text-center py-2 bg-slate-800/60 rounded-xl border border-slate-800">
+              <div class="p-1"><p class="text-lg font-black text-amber-400">{{ examTimer.days }}</p><p class="text-[9px] text-slate-400">DAYS</p></div>
+              <div class="p-1"><p class="text-lg font-black">{{ examTimer.hours }}</p><p class="text-[9px] text-slate-400">HOURS</p></div>
+              <div class="p-1"><p class="text-lg font-black">{{ examTimer.minutes }}</p><p class="text-[9px] text-slate-400">MINS</p></div>
+              <div class="p-1"><p class="text-lg font-black text-sky-400">{{ examTimer.seconds }}</p><p class="text-[9px] text-slate-400">SECS</p></div>
+            </div>
+          </section>
+        </div>
+      </div>
+
+      <!-- 📊 DAILY STUDY STATS & FLOWCHART (สรุปสถิติรายวันและแผนผังวงจรการเรียนรู้) -->
+      <section class="bg-app-card dark:bg-app-darkCard p-4 rounded-2xl border border-app-border dark:border-app-darkBorder shadow-sm space-y-3.5">
+        <div class="flex flex-wrap items-center justify-between gap-2 border-b dark:border-slate-800 pb-2.5">
+          <div>
+            <h3 class="font-bold text-xs md:text-sm text-slate-800 dark:text-slate-100 flex items-center gap-2">
+              <i class="fa-solid fa-chart-pie text-indigo-500"></i> สรุปสถิติรายวัน & แผนผังวงจรการเรียนรู้ (Daily Study Flowchart)
+            </h3>
+            <p class="text-[11px] text-slate-400">ภาพรวมความก้าวหน้ารายวันและลำดับขั้นตอนการเรียนรู้ของนิสิต/นักเรียน</p>
+          </div>
+          <div class="flex items-center gap-2">
+            <span class="text-[11px] font-bold text-slate-500 dark:text-slate-400">ความพร้อมรายวัน:</span>
+            <span class="text-xs font-black font-mono px-2 py-0.5 rounded-lg bg-indigo-50 dark:bg-indigo-950/60 text-indigo-600 dark:text-indigo-400 border border-indigo-200 dark:border-indigo-900">
+              {{ dailyProgressScore }}%
+            </span>
+          </div>
+        </div>
+
+        <!-- PROGRESS BAR -->
+        <div class="w-full bg-slate-100 dark:bg-slate-800 rounded-full h-2 overflow-hidden">
+          <div class="bg-gradient-to-r from-indigo-500 via-teal-500 to-emerald-500 h-2 rounded-full transition-all duration-500"
+               :style="{ width: dailyProgressScore + '%' }"></div>
+        </div>
+
+        <!-- 4 SUMMARY STATS TILES -->
+        <div class="grid grid-cols-2 sm:grid-cols-4 gap-2">
+          <div class="p-2.5 rounded-xl bg-slate-50 dark:bg-slate-800/60 border border-app-border dark:border-app-darkBorder space-y-1">
+            <div class="flex items-center justify-between text-[11px] text-slate-400 font-medium">
+              <span>เช็คอินวันนี้</span>
+              <i class="fa-solid fa-fire text-amber-500"></i>
+            </div>
+            <p class="text-sm md:text-base font-bold" :class="isCheckedInToday ? 'text-emerald-600 dark:text-emerald-400' : 'text-slate-600 dark:text-slate-300'">
+              {{ isCheckedInToday ? '✓ เช็คอินแล้ว' : 'รอเช็คอิน' }}
+            </p>
+            <p class="text-[10px] text-slate-400">Streak {{ streakCount }} วัน (1 ครั้ง/วัน)</p>
+          </div>
+
+          <div class="p-2.5 rounded-xl bg-slate-50 dark:bg-slate-800/60 border border-app-border dark:border-app-darkBorder space-y-1">
+            <div class="flex items-center justify-between text-[11px] text-slate-400 font-medium">
+              <span>คาบเรียนวันนี้</span>
+              <i class="fa-solid fa-graduation-cap text-blue-500"></i>
+            </div>
+            <p class="text-sm md:text-base font-bold text-blue-600 dark:text-blue-400">
+              {{ todayScheduleList.length }} วิชา
+            </p>
+            <p class="text-[10px] text-slate-400">{{ currentDayName }}</p>
+          </div>
+
+          <div class="p-2.5 rounded-xl bg-slate-50 dark:bg-slate-800/60 border border-app-border dark:border-app-darkBorder space-y-1">
+            <div class="flex items-center justify-between text-[11px] text-slate-400 font-medium">
+              <span>โฟกัสสะสม</span>
+              <i class="fa-solid fa-stopwatch text-rose-500"></i>
+            </div>
+            <p class="text-sm md:text-base font-bold text-rose-600 dark:text-rose-400">
+              {{ focusSessionsCompleted * 25 }} นาที
+            </p>
+            <p class="text-[10px] text-slate-400">{{ focusSessionsCompleted }} รอบเสร็จสิ้น</p>
+          </div>
+
+          <div class="p-2.5 rounded-xl bg-slate-50 dark:bg-slate-800/60 border border-app-border dark:border-app-darkBorder space-y-1">
+            <div class="flex items-center justify-between text-[11px] text-slate-400 font-medium">
+              <span>ภารกิจด่วน</span>
+              <i class="fa-solid fa-list-check text-emerald-500"></i>
+            </div>
+            <p class="text-sm md:text-base font-bold" :class="todayTasksPendingCount === 0 ? 'text-emerald-600 dark:text-emerald-400' : 'text-amber-600 dark:text-amber-400'">
+              {{ todayTasksCompletedCount }}/{{ todayTasksTotalCount }} งาน
+            </p>
+            <p class="text-[10px] text-slate-400">{{ todayTasksPendingCount > 0 ? `ค้าง ${todayTasksPendingCount} งาน` : 'ไม่มีงานค้าง' }}</p>
+          </div>
+        </div>
+
+        <!-- FLOWCHART PIPELINE -->
+        <div class="pt-2">
+          <div class="flex items-center justify-between mb-2">
+            <span class="text-[11px] font-bold text-slate-700 dark:text-slate-300 flex items-center gap-1.5">
+              <i class="fa-solid fa-diagram-project text-indigo-500"></i> แผนผังวงจรการเรียนรู้รายวัน (Study Flowchart Pipeline):
+            </span>
+            <span class="text-[10px] text-slate-400 hidden sm:inline">คลิกแต่ละขั้นตอนเพื่อดำเนินการทันที</span>
+          </div>
+
+          <div class="grid grid-cols-1 sm:grid-cols-5 gap-2 relative">
+            <div v-for="(step, idx) in dailyFlowchartSteps" :key="step.id"
+                 @click="handleFlowchartAction(step.action)"
+                 class="p-2.5 rounded-xl border transition-all cursor-pointer relative flex flex-col justify-between select-none hover:scale-[1.02]"
+                 :class="step.done
+                   ? 'bg-emerald-50/70 dark:bg-emerald-950/30 border-emerald-300 dark:border-emerald-800 text-emerald-900 dark:text-emerald-200'
+                   : (step.active
+                     ? 'bg-indigo-50/70 dark:bg-indigo-950/30 border-indigo-300 dark:border-indigo-700 text-indigo-900 dark:text-indigo-200 ring-1 ring-indigo-400/40'
+                     : 'bg-slate-50 dark:bg-slate-800/40 border-slate-200 dark:border-slate-700 text-slate-600 dark:text-slate-400 hover:bg-slate-100')">
+              
+              <div class="flex items-center justify-between mb-1.5">
+                <span class="w-5 h-5 rounded-full flex items-center justify-center text-[10px] font-bold"
+                      :class="step.done ? 'bg-emerald-600 text-white' : 'bg-slate-200 dark:bg-slate-700 text-slate-700 dark:text-slate-200'">
+                  <i v-if="step.done" class="fa-solid fa-check text-[9px]"></i>
+                  <span v-else>{{ idx + 1 }}</span>
+                </span>
+                <i v-if="idx < 4" class="hidden sm:block fa-solid fa-arrow-right text-[10px] text-slate-300 dark:text-slate-600"></i>
+                <i v-if="idx < 4" class="block sm:hidden fa-solid fa-arrow-down text-[10px] text-slate-300 dark:text-slate-600"></i>
+              </div>
+
+              <div class="space-y-1">
+                <div class="flex items-center gap-1.5">
+                  <i :class="step.icon" class="text-xs"></i>
+                  <h4 class="font-bold text-xs leading-tight">{{ step.name }}</h4>
+                </div>
+                <p class="text-[10px] font-medium" :class="step.done ? 'text-emerald-700 dark:text-emerald-400' : 'text-slate-500 dark:text-slate-400'">
+                  {{ step.statusText }}
+                </p>
+              </div>
+
+              <div class="mt-2 pt-1.5 border-t dark:border-slate-700/60 flex items-center justify-between text-[10px]">
+                <span class="font-semibold" :class="step.done ? 'text-emerald-600 dark:text-emerald-400' : 'text-indigo-600 dark:text-indigo-400'">
+                  {{ step.done ? '✓ สำเร็จ' : (step.actionText || 'คลิกทำทันที →') }}
+                </span>
+              </div>
+            </div>
+          </div>
         </div>
       </section>
     </main>
 
-    <!-- TAB 2: 📅 SCHEDULE (WEEKLY TIMETABLE) -->
+    <!-- TAB 2: 📅 SCHEDULE (3 VIEWS: WEEK, MONTH, LIST) -->
     <main v-if="activeTab === 'schedule'" class="space-y-4">
-      <div class="flex justify-between items-center">
-        <h2 class="font-bold text-base">📅 ตารางเรียนประจำสัปดาห์ (Weekly Schedule)</h2>
-        <button @click="openUploadModal" class="px-3 py-1.5 bg-indigo-600 text-white text-xs font-bold rounded-xl shadow flex items-center gap-1"><i class="fa-solid fa-wand-magic-sparkles"></i> AI สแกนตาราง</button>
+      <div class="flex flex-wrap justify-between items-center gap-2">
+        <div>
+          <h2 class="font-bold text-base">📅 ตารางเรียน (Study Schedule)</h2>
+          <p class="text-xs text-slate-400">เลือกมุมมองที่สะดวก: ตารางสัปดาห์, ปฏิทินรายเดือน หรือลิสต์รายวันสำหรับมือถือ</p>
+        </div>
+        
+        <!-- 3 VIEW TOGGLE BUTTONS -->
+        <div class="flex items-center gap-2">
+          <div class="bg-slate-100 dark:bg-slate-800 p-1 rounded-xl flex items-center gap-1 border border-app-border dark:border-app-darkBorder text-xs font-semibold">
+            <button @click="scheduleViewMode = 'week'"
+                    :class="scheduleViewMode === 'week' ? 'bg-white dark:bg-slate-900 text-indigo-600 dark:text-indigo-400 shadow-xs' : 'text-slate-500 hover:text-slate-800 dark:hover:text-slate-200'"
+                    class="px-2.5 py-1 rounded-lg transition flex items-center gap-1">
+              <i class="fa-solid fa-table-columns"></i> Week
+            </button>
+            <button @click="scheduleViewMode = 'month'"
+                    :class="scheduleViewMode === 'month' ? 'bg-white dark:bg-slate-900 text-indigo-600 dark:text-indigo-400 shadow-xs' : 'text-slate-500 hover:text-slate-800 dark:hover:text-slate-200'"
+                    class="px-2.5 py-1 rounded-lg transition flex items-center gap-1">
+              <i class="fa-regular fa-calendar"></i> Month
+            </button>
+            <button @click="scheduleViewMode = 'list'"
+                    :class="scheduleViewMode === 'list' ? 'bg-white dark:bg-slate-900 text-indigo-600 dark:text-indigo-400 shadow-xs' : 'text-slate-500 hover:text-slate-800 dark:hover:text-slate-200'"
+                    class="px-2.5 py-1 rounded-lg transition flex items-center gap-1">
+              <i class="fa-solid fa-list-ul"></i> List
+            </button>
+          </div>
+          <button @click="openUploadModal" class="px-3 py-1.5 bg-indigo-600 hover:bg-indigo-700 text-white text-xs font-bold rounded-xl shadow flex items-center gap-1 transition">
+            <i class="fa-solid fa-wand-magic-sparkles"></i> AI สแกน
+          </button>
+        </div>
       </div>
 
-      <div class="grid grid-cols-1 gap-3">
-        <div v-for="day in weekDays" :key="day.key" class="bg-app-card dark:bg-app-darkCard p-4 rounded-2xl border border-app-border dark:border-app-darkBorder shadow-sm space-y-2">
-          <h3 class="font-bold text-xs md:text-sm text-slate-500 dark:text-slate-400 border-b dark:border-slate-800 pb-1.5 flex items-center gap-2">
-            <span class="w-2.5 h-2.5 rounded-full" :class="day.colorClass"></span> {{ day.label }}
-          </h3>
-          <div v-if="getScheduleForDay(day.key).length > 0" class="grid grid-cols-1 sm:grid-cols-2 gap-2">
-            <div v-for="item in getScheduleForDay(day.key)" :key="item.id" @click="openCourseDetailByCourseId(item.courseId)" class="p-3 bg-slate-50 dark:bg-slate-800/60 rounded-xl border border-app-border dark:border-app-darkBorder hover:border-app-accent cursor-pointer transition">
-              <div class="flex justify-between items-start">
-                <span class="text-[10px] font-bold px-2 py-0.5 rounded bg-blue-100 text-blue-800 dark:bg-blue-900/60 dark:text-blue-300">{{ item.code }}</span>
-                <span class="text-[11px] font-mono font-bold text-slate-600 dark:text-slate-300"><i class="fa-regular fa-clock mr-1"></i>{{ item.schedule.start }} - {{ item.schedule.end }}</span>
-              </div>
-              <h4 class="font-bold text-xs mt-1.5">{{ item.name }}</h4>
-              <p class="text-[10px] text-slate-400 mt-1"><i class="fa-solid fa-location-dot mr-1"></i>ห้อง {{ item.schedule.room }} • {{ item.instructor }}</p>
+      <!-- VIEW 1: WEEK VIEW (TIMETABLE GRID) -->
+      <div v-if="scheduleViewMode === 'week'" class="bg-app-card dark:bg-app-darkCard p-4 rounded-2xl border border-app-border dark:border-app-darkBorder shadow-sm overflow-x-auto">
+        <div class="min-w-[650px]">
+          <!-- Days of Week Header -->
+          <div class="grid grid-cols-6 border-b dark:border-slate-800 pb-2 text-center text-xs font-bold">
+            <div class="text-slate-400 py-1 font-mono">TIME</div>
+            <div v-for="d in activeWeekDays" :key="d.key" class="py-1" :class="d.key === currentDayName ? 'text-indigo-600 dark:text-indigo-400' : 'text-slate-600 dark:text-slate-300'">
+              {{ d.key }} <span class="text-[10px] font-normal block text-slate-400">{{ d.shortLabel }}</span>
             </div>
           </div>
-          <p v-else class="text-[11px] text-slate-400 italic py-1">ไม่มีคาบเรียน</p>
+
+          <!-- Time Slots Rows -->
+          <div class="divide-y dark:divide-slate-800 text-xs">
+            <div v-for="slot in timeSlots" :key="slot" class="grid grid-cols-6 py-2.5 items-start min-h-[72px]">
+              <!-- Time Column -->
+              <div class="font-mono text-slate-400 font-semibold text-[11px] pt-1 text-center">
+                {{ slot }}
+              </div>
+              
+              <!-- 5 Days Columns -->
+              <div v-for="d in activeWeekDays" :key="d.key" class="px-1 relative min-h-[50px]">
+                <div v-for="course in getCoursesForSlotAndDay(d.key, slot)" :key="course.id"
+                     @click="openCourseDetailByCourseId(course.id)"
+                     class="p-2 rounded-xl bg-indigo-50/90 dark:bg-indigo-950/60 border border-indigo-200 dark:border-indigo-800/80 text-indigo-900 dark:text-indigo-200 cursor-pointer hover:scale-[1.02] transition shadow-xs space-y-0.5">
+                  <div class="flex items-center justify-between">
+                    <span class="font-mono font-bold text-[10px] px-1 rounded bg-indigo-200/80 dark:bg-indigo-900 text-indigo-800 dark:text-indigo-300">{{ course.code }}</span>
+                    <span class="text-[9px] text-slate-400 font-mono">{{ course.schedule.start }}-{{ course.schedule.end }}</span>
+                  </div>
+                  <h5 class="font-bold text-[11px] leading-tight truncate">{{ course.name }}</h5>
+                  <p class="text-[9px] text-slate-500 dark:text-slate-400 truncate">
+                    <i class="fa-solid fa-location-dot text-[8px] mr-0.5"></i>{{ course.schedule.room || '-' }}
+                  </p>
+                </div>
+              </div>
+            </div>
+          </div>
+        </div>
+      </div>
+
+      <!-- VIEW 2: MONTH VIEW (MONTHLY OVERVIEW CALENDAR) -->
+      <div v-else-if="scheduleViewMode === 'month'" class="bg-app-card dark:bg-app-darkCard p-4 rounded-2xl border border-app-border dark:border-app-darkBorder shadow-sm space-y-3">
+        <div class="flex justify-between items-center border-b dark:border-slate-800 pb-2">
+          <h3 class="font-bold text-sm font-mono flex items-center gap-2">
+            <i class="fa-regular fa-calendar text-indigo-500"></i> {{ currentMonthYearDisplay }}
+          </h3>
+          <span class="text-[11px] text-slate-400">คลิกวันที่เพื่อดูรายละเอียดกิจกรรม</span>
+        </div>
+
+        <!-- Month Days Header -->
+        <div class="grid grid-cols-7 text-center font-mono text-[11px] font-bold text-slate-400 border-b dark:border-slate-800 pb-1.5">
+          <span>SUN</span><span>MON</span><span>TUE</span><span>WED</span><span>THU</span><span>FRI</span><span>SAT</span>
+        </div>
+
+        <!-- Month Grid -->
+        <div class="grid grid-cols-7 gap-1 text-xs">
+          <div v-for="day in monthCalendarDays" :key="day.dateStr"
+               @click="selectedCalendarDay = day.dateStr"
+               class="p-1.5 rounded-xl border transition min-h-[64px] flex flex-col justify-between cursor-pointer"
+               :class="day.isCurrentMonth
+                 ? (selectedCalendarDay === day.dateStr
+                   ? 'bg-indigo-50 dark:bg-indigo-950/60 border-indigo-400 dark:border-indigo-600 ring-1 ring-indigo-400'
+                   : (day.isToday ? 'bg-amber-50/60 dark:bg-amber-950/30 border-amber-300 dark:border-amber-800' : 'bg-slate-50/50 dark:bg-slate-800/40 border-slate-200 dark:border-slate-700/60 hover:bg-slate-100'))
+                 : 'opacity-30 border-transparent'">
+            <div class="flex justify-between items-center font-mono text-[11px]">
+              <span :class="day.isToday ? 'w-5 h-5 rounded-full bg-amber-500 text-white font-bold flex items-center justify-center text-[10px]' : 'font-semibold text-slate-600 dark:text-slate-300'">{{ day.dayNumber }}</span>
+              <span v-if="day.hasExam" class="w-2 h-2 rounded-full bg-rose-500" title="มีสอบ"></span>
+            </div>
+            
+            <div class="space-y-0.5 mt-1">
+              <span v-if="day.classCount > 0" class="block text-[9px] font-medium px-1 py-0.2 rounded bg-blue-100 dark:bg-blue-950 text-blue-800 dark:text-blue-300 truncate">
+                {{ day.classCount }} วิชา
+              </span>
+              <span v-if="day.taskCount > 0" class="block text-[9px] font-medium px-1 py-0.2 rounded bg-emerald-100 dark:bg-emerald-950 text-emerald-800 dark:text-emerald-300 truncate">
+                {{ day.taskCount }} งาน
+              </span>
+            </div>
+          </div>
+        </div>
+
+        <!-- Selected Day Details Panel -->
+        <div v-if="selectedCalendarDay" class="p-3 bg-slate-50 dark:bg-slate-800/60 rounded-xl border border-app-border dark:border-app-darkBorder space-y-2">
+          <div class="flex justify-between items-center">
+            <h4 class="font-bold text-xs flex items-center gap-1.5">
+              <i class="fa-solid fa-calendar-check text-indigo-500"></i> กิจกรรมวันที่ {{ selectedCalendarDay }}
+            </h4>
+            <button @click="selectedCalendarDay = null" class="text-slate-400 hover:text-slate-600 text-xs"><i class="fa-solid fa-xmark"></i></button>
+          </div>
+          <div class="space-y-1 text-xs">
+            <div v-for="item in getEventsForDate(selectedCalendarDay)" :key="item.id" class="p-1.5 bg-white dark:bg-slate-900 rounded-lg border dark:border-slate-800 flex items-center justify-between">
+              <div class="flex items-center gap-2">
+                <span :class="item.badgeClass" class="text-[9px] font-bold px-1.5 py-0.5 rounded">{{ item.typeLabel }}</span>
+                <span class="font-bold text-xs">{{ item.title }}</span>
+              </div>
+              <span class="text-[10px] font-mono text-slate-400">{{ item.timeInfo }}</span>
+            </div>
+            <p v-if="getEventsForDate(selectedCalendarDay).length === 0" class="text-[11px] text-slate-400 italic py-1">ไม่มีกำหนดการในวันนี้</p>
+          </div>
+        </div>
+      </div>
+
+      <!-- VIEW 3: LIST VIEW (MOBILE-FIRST DAILY FEED) -->
+      <div v-else class="space-y-3">
+        <div v-for="dayFeed in scheduleListFeed" :key="dayFeed.dayKey" class="bg-app-card dark:bg-app-darkCard p-4 rounded-2xl border border-app-border dark:border-app-darkBorder shadow-sm space-y-2.5">
+          <div class="flex items-center justify-between border-b dark:border-slate-800 pb-2">
+            <h3 class="font-bold text-xs md:text-sm flex items-center gap-2">
+              <span class="w-2.5 h-2.5 rounded-full" :class="dayFeed.colorClass"></span>
+              <span class="font-mono">{{ dayFeed.dayKey }}</span>
+              <span class="text-slate-400 font-normal">({{ dayFeed.dayLabel }})</span>
+            </h3>
+            <span class="text-[11px] font-mono font-semibold text-indigo-600 dark:text-indigo-400">{{ dayFeed.courses.length }} วิชา</span>
+          </div>
+
+          <div v-if="dayFeed.courses.length > 0" class="space-y-2">
+            <div v-for="course in dayFeed.courses" :key="course.id" @click="openCourseDetailByCourseId(course.id)"
+                 class="p-3 bg-slate-50 dark:bg-slate-800/60 rounded-xl border border-slate-200 dark:border-slate-700 hover:border-indigo-500 cursor-pointer transition flex justify-between items-center">
+              <div class="flex items-center gap-3">
+                <span class="text-xs font-mono font-bold px-2 py-1 rounded-lg bg-indigo-100 text-indigo-800 dark:bg-indigo-950 dark:text-indigo-300">
+                  {{ course.schedule.start }}–{{ course.schedule.end }}
+                </span>
+                <div>
+                  <h4 class="font-bold text-xs md:text-sm">{{ course.code }}: {{ course.name }}</h4>
+                  <p class="text-[11px] text-slate-400 mt-0.5">
+                    <i class="fa-solid fa-location-dot mr-1"></i>ห้อง {{ course.schedule.room || '-' }} • อ. {{ course.instructor || '-' }}
+                  </p>
+                </div>
+              </div>
+              <span class="text-xs text-slate-400"><i class="fa-solid fa-chevron-right text-xs"></i></span>
+            </div>
+          </div>
+          <p v-else class="text-[11px] text-slate-400 italic py-1">ไม่มีคาบเรียนในวันนี้</p>
         </div>
       </div>
     </main>
 
-    <!-- TAB 3: 📚 COURSES (COURSE HUB) -->
+    <!-- TAB 3: 📚 COURSES (COURSE HUB - FIRST CLASS ENTITY) -->
     <main v-if="activeTab === 'courses'" class="space-y-4">
-      <div class="flex justify-between items-center">
-        <h2 class="font-bold text-base">📚 วิชาที่ลงทะเบียน (Course Hub)</h2>
-        <div class="flex gap-2">
-          <button @click="openUploadModal" class="px-3 py-1.5 bg-indigo-600 text-white text-xs font-bold rounded-xl shadow flex items-center gap-1"><i class="fa-solid fa-wand-magic-sparkles"></i> AI สแกนวิชา</button>
-          <button @click="showAddCourseModal = true" class="px-3 py-1.5 bg-slate-900 dark:bg-white text-white dark:text-slate-900 text-xs font-bold rounded-xl">+ เพิ่มวิชา</button>
+      <div class="flex flex-wrap justify-between items-center gap-2">
+        <div>
+          <h2 class="font-bold text-base">📚 รายวิชา (Course Hub & Entities)</h2>
+          <p class="text-xs text-slate-400">วิชาแต่ละตัวเป็น Entity เชื่อมโยงงาน สอบ และโน้ตสรุปเนื้อหา</p>
+        </div>
+        <div class="flex flex-wrap gap-2">
+          <button v-if="aiCoursesInCurrentTerm.length > 0" @click="deleteAllAiCourses"
+                  class="px-2.5 py-1.5 bg-rose-50 hover:bg-rose-100 dark:bg-rose-950/40 text-rose-600 dark:text-rose-400 text-xs font-semibold rounded-xl border border-rose-200 dark:border-rose-900 flex items-center gap-1 transition">
+            <i class="fa-solid fa-trash-can"></i> ลบวิชาจาก AI ทั้งหมด ({{ aiCoursesInCurrentTerm.length }})
+          </button>
+          <button @click="openUploadModal" class="px-3 py-1.5 bg-indigo-600 hover:bg-indigo-700 text-white text-xs font-bold rounded-xl shadow flex items-center gap-1 transition">
+            <i class="fa-solid fa-wand-magic-sparkles"></i> + AI สแกน
+          </button>
+          <button @click="showAddCourseModal = true" class="px-3 py-1.5 bg-slate-900 dark:bg-white text-white dark:text-slate-900 text-xs font-bold rounded-xl shadow-sm hover:opacity-90 transition">
+            + เพิ่มวิชา
+          </button>
         </div>
       </div>
 
       <div class="grid grid-cols-1 md:grid-cols-2 gap-3">
         <div v-for="course in currentTermCourses" :key="course.id" @click="openCourseDetail(course)"
-             class="bg-app-card dark:bg-app-darkCard p-4 rounded-2xl border border-app-border dark:border-app-darkBorder shadow-sm hover:border-app-accent cursor-pointer transition space-y-2">
+             class="bg-app-card dark:bg-app-darkCard p-4 rounded-2xl border border-app-border dark:border-app-darkBorder shadow-sm hover:border-indigo-500 cursor-pointer transition space-y-3 relative group">
           <div class="flex justify-between items-start">
             <div>
-              <span class="text-[10px] font-bold px-2 py-0.5 rounded bg-blue-100 text-blue-800 dark:bg-blue-900/60 dark:text-blue-300">{{ course.code }}</span>
-              <h3 class="font-bold text-sm mt-1">{{ course.name }}</h3>
+              <div class="flex items-center gap-1.5">
+                <span class="text-[10px] font-mono font-bold px-2 py-0.5 rounded bg-blue-100 text-blue-800 dark:bg-blue-900/60 dark:text-blue-300">{{ course.code }}</span>
+                <span v-if="course.source === 'ai'" class="text-[9px] font-bold px-1.5 py-0.5 rounded bg-indigo-100 dark:bg-indigo-950/70 text-indigo-700 dark:text-indigo-300 flex items-center gap-1 border border-indigo-200 dark:border-indigo-900">
+                  <i class="fa-solid fa-wand-magic-sparkles text-[8px]"></i> AI Scan
+                </span>
+              </div>
+              <h3 class="font-bold text-sm text-slate-800 dark:text-slate-100 mt-1">{{ course.name }}</h3>
             </div>
-            <span class="text-xs font-bold font-mono px-2 py-1 bg-slate-100 dark:bg-slate-800 rounded-lg">{{ course.credit }} หน่วยกิต</span>
+            <div class="flex items-center gap-1.5">
+              <span class="text-xs font-bold font-mono px-2 py-1 bg-slate-100 dark:bg-slate-800 rounded-lg">{{ course.credit }} หน่วยกิต</span>
+              <button @click.stop="deleteCourse(course.id)" title="ลบรายวิชานี้" class="w-7 h-7 rounded-lg hover:bg-rose-100 dark:hover:bg-rose-950 text-slate-400 hover:text-rose-600 flex items-center justify-center text-xs transition">
+                <i class="fa-solid fa-trash-can"></i>
+              </button>
+            </div>
           </div>
-          <div class="text-xs text-slate-400 space-y-1">
-            <p><i class="fa-solid fa-user-tie mr-1"></i>{{ course.instructor }}</p>
-            <p><i class="fa-solid fa-clock mr-1"></i>{{ course.schedule.day }} {{ course.schedule.start }}-{{ course.schedule.end }} (ห้อง {{ course.schedule.room }})</p>
+
+          <div class="text-xs text-slate-500 dark:text-slate-400 space-y-1">
+            <p><i class="fa-solid fa-user-tie mr-1 text-slate-400"></i>{{ course.instructor || 'ไม่ระบุผู้สอน' }}</p>
+            <p><i class="fa-regular fa-clock mr-1 text-slate-400"></i>{{ course.schedule?.day }} {{ course.schedule?.start }}-{{ course.schedule?.end }} (ห้อง {{ course.schedule?.room || '-' }})</p>
+          </div>
+
+          <!-- FIRST-CLASS ENTITY STATS (ASSIGNMENTS, EXAMS, NOTES) -->
+          <div class="pt-2 border-t dark:border-slate-800 flex items-center justify-between text-xs font-mono">
+            <div class="flex items-center gap-3 text-[11px] text-slate-500 dark:text-slate-400">
+              <span title="งาน / การบ้าน"><i class="fa-solid fa-check-square text-indigo-500 mr-1"></i>{{ getCourseTasksCount(course.id) }} งาน</span>
+              <span title="กำหนดการสอบ"><i class="fa-solid fa-file-pen text-rose-500 mr-1"></i>{{ getCourseExamsCount(course.id) }} สอบ</span>
+              <span title="สมุดโน้ต"><i class="fa-solid fa-book-bookmark text-amber-500 mr-1"></i>{{ (course.notes || []).length }} โน้ต</span>
+            </div>
+            <span class="text-indigo-600 dark:text-indigo-400 font-bold hover:underline">ดูรายละเอียด →</span>
           </div>
         </div>
       </div>
-      <p v-if="currentTermCourses.length === 0" class="text-slate-400 text-xs text-center py-8">ยังไม่มีรายวิชาในเทอมนี้ กรุณาเพิ่มวิชาใหม่หรือใช้ AI สแกน</p>
+      <p v-if="currentTermCourses.length === 0" class="text-slate-400 text-xs text-center py-8 bg-slate-50 dark:bg-slate-800/40 rounded-xl">ยังไม่มีรายวิชาในเทอมนี้ กรุณาเพิ่มวิชาใหม่หรือใช้ AI สแกน</p>
     </main>
 
-    <!-- TAB 4: 📝 TASKS -->
+    <!-- TAB 4: 📝 TASKS (ACADEMIC TASK MANAGER) -->
     <main v-if="activeTab === 'tasks'" class="space-y-4">
       <section class="bg-app-card dark:bg-app-darkCard p-4 rounded-2xl border border-app-border dark:border-app-darkBorder shadow-sm space-y-3">
-        <h3 class="font-bold text-xs">➕ เพิ่มการบ้าน / งานใหม่</h3>
+        <h3 class="font-bold text-xs flex items-center gap-1.5">
+          <i class="fa-solid fa-plus-circle text-indigo-500"></i> เพิ่มงาน / การบ้านใหม่ (New Assignment)
+        </h3>
         <div class="grid grid-cols-1 md:grid-cols-12 gap-2">
-          <input v-model="newTask.title" placeholder="รายละเอียดการบ้าน / งาน..." class="md:col-span-5 bg-slate-50 dark:bg-slate-800 border border-app-border dark:border-app-darkBorder rounded-xl px-3 py-2 text-xs outline-none">
+          <input v-model="newTask.title" placeholder="ชื่องาน / รายละเอียด เช่น สรุปบทความ..." class="md:col-span-4 bg-slate-50 dark:bg-slate-800 border border-app-border dark:border-app-darkBorder rounded-xl px-3 py-2 text-xs outline-none">
           <select v-model="newTask.courseId" class="md:col-span-3 bg-slate-50 dark:bg-slate-800 border border-app-border dark:border-app-darkBorder rounded-xl px-2 py-2 text-xs outline-none">
-            <option value="">เลือกวิชา (ถ้ามี)</option>
+            <option value="">เลือกวิชาที่สังกัด (ถ้ามี)</option>
             <option v-for="c in currentTermCourses" :key="c.id" :value="c.id">{{ c.code }} - {{ c.name }}</option>
           </select>
           <input v-model="newTask.deadline" type="date" class="md:col-span-2 bg-slate-50 dark:bg-slate-800 border border-app-border dark:border-app-darkBorder rounded-xl px-2 py-2 text-xs outline-none">
-          <select v-model="newTask.priority" class="md:col-span-2 bg-slate-50 dark:bg-slate-800 border border-app-border dark:border-app-darkBorder rounded-xl px-2 py-2 text-xs outline-none font-semibold">
-            <option value="HIGH">🔴 ด่วน (HIGH)</option>
-            <option value="MEDIUM">🟡 ปกติ (MEDIUM)</option>
-            <option value="LOW">🟢 ไว้ทีหลัง (LOW)</option>
+          <select v-model="newTask.priority" class="md:col-span-3 bg-slate-50 dark:bg-slate-800 border border-app-border dark:border-app-darkBorder rounded-xl px-2 py-2 text-xs outline-none font-semibold">
+            <option value="HIGH">🔴 ด่วน (High Priority)</option>
+            <option value="MEDIUM">🟡 ปานกลาง (Medium)</option>
+            <option value="LOW">🟢 ทั่วไป (Low)</option>
           </select>
         </div>
-        <button @click="addTask" class="w-full py-2 bg-slate-900 dark:bg-white text-white dark:text-slate-900 rounded-xl font-bold text-xs">บันทึกการบ้าน</button>
+        <button @click="addTask" class="w-full py-2 bg-slate-900 dark:bg-white text-white dark:text-slate-900 rounded-xl font-bold text-xs hover:opacity-90 transition">
+          + บันทึกการบ้าน / งาน
+        </button>
       </section>
 
-      <div class="space-y-2">
-        <div v-for="task in sortedTasks" :key="task.id" class="p-3 bg-app-card dark:bg-app-darkCard border border-app-border dark:border-app-darkBorder rounded-xl flex items-center justify-between shadow-sm">
-          <div class="flex items-center gap-3">
-            <input type="checkbox" v-model="task.completed" @change="completeTask(task)" class="w-4 h-4 accent-emerald-600 cursor-pointer">
-            <div>
-              <div class="flex items-center gap-2">
-                <span :class="getPriorityBadgeClass(task.priority)" class="text-[9px] font-bold px-1.5 py-0.5 rounded">{{ task.priority }}</span>
-                <span class="text-[10px] font-bold text-slate-500">{{ getCourseCode(task.courseId) }}</span>
-                <h4 :class="{'line-through text-slate-400': task.completed}" class="font-bold text-xs md:text-sm">{{ task.title }}</h4>
+      <!-- FILTER BUTTONS (All, Today, This Week, Overdue, Completed) -->
+      <div class="flex items-center gap-1.5 overflow-x-auto pb-1 text-xs">
+        <button v-for="f in taskFilters" :key="f.id" @click="selectedTaskFilter = f.id"
+                :class="selectedTaskFilter === f.id ? 'bg-indigo-600 text-white shadow-xs font-bold' : 'bg-app-card dark:bg-app-darkCard text-slate-500 border border-app-border dark:border-app-darkBorder hover:border-slate-400'"
+                class="px-3 py-1.5 rounded-xl shrink-0 transition flex items-center gap-1.5">
+          <i :class="f.icon"></i> {{ f.label }}
+          <span class="px-1.5 py-0.2 rounded-full text-[10px]" :class="selectedTaskFilter === f.id ? 'bg-indigo-700 text-white' : 'bg-slate-100 dark:bg-slate-800 text-slate-400'">
+            {{ getTaskCountByFilter(f.id) }}
+          </span>
+        </button>
+      </div>
+
+      <!-- TASKS LIST WITH DETAILED CARD & PROGRESS SLIDER -->
+      <div class="space-y-2.5">
+        <div v-for="task in filteredTasks" :key="task.id"
+             class="p-4 bg-app-card dark:bg-app-darkCard border border-app-border dark:border-app-darkBorder rounded-2xl shadow-sm space-y-3 transition">
+          <div class="flex items-start justify-between gap-2">
+            <div class="flex items-start gap-3 flex-1 min-w-0">
+              <input type="checkbox" :checked="task.progress === 100" @change="toggleTaskComplete(task)" class="w-5 h-5 accent-emerald-600 mt-0.5 cursor-pointer shrink-0">
+              <div class="min-w-0 flex-1">
+                <div class="flex items-center gap-2 flex-wrap">
+                  <span :class="getPriorityBadgeClass(task.priority)" class="text-[9px] font-bold px-1.5 py-0.5 rounded">{{ task.priority }}</span>
+                  <span class="text-[10px] font-bold font-mono px-1.5 py-0.5 rounded bg-slate-100 dark:bg-slate-800 text-slate-600 dark:text-slate-300">{{ getCourseCode(task.courseId) }}</span>
+                  <span :class="getTaskStatusBadge(task).class" class="text-[9px] font-bold px-1.5 py-0.5 rounded flex items-center gap-1">
+                    <span class="w-1.5 h-1.5 rounded-full" :class="getTaskStatusBadge(task).dotClass"></span>
+                    {{ getTaskStatusBadge(task).label }}
+                  </span>
+                </div>
+                <h4 :class="{'line-through text-slate-400': task.progress === 100}" class="font-bold text-sm mt-1 leading-snug">{{ task.title }}</h4>
+                <p class="text-[11px] text-slate-400 mt-0.5 flex items-center gap-2">
+                  <span><i class="fa-regular fa-calendar mr-1"></i>Due: {{ task.deadline || '-' }}</span>
+                  <span>•</span>
+                  <span :class="getDueCountdownClass(task.deadline)">{{ getDueCountdownLabel(task.deadline) }}</span>
+                </p>
               </div>
-              <p class="text-[11px] text-slate-400 font-medium mt-0.5"><i class="fa-regular fa-calendar mr-1"></i>{{ getDeadlineLabel(task.deadline) }}</p>
             </div>
-          </div>
-          <button @click="deleteTask(task.id)" class="text-slate-400 hover:text-red-500 text-xs p-1"><i class="fa-solid fa-trash-can"></i></button>
-        </div>
-      </div>
-      <p v-if="tasks.length === 0" class="text-slate-400 text-xs text-center py-6">ไม่มีรายการการบ้าน / งานที่ค้างอยู่</p>
-    </main>
-
-    <!-- TAB 5: 🧪 EXAMS -->
-    <main v-if="activeTab === 'exams'" class="space-y-4">
-      <div class="flex justify-between items-center">
-        <h2 class="font-bold text-base">🧪 กำหนดการสอบ (Exams Schedule)</h2>
-        <button @click="showAddExamModal = true" class="px-3 py-1.5 bg-slate-900 dark:bg-white text-white dark:text-slate-900 text-xs font-bold rounded-xl">+ เพิ่มวันสอบ</button>
-      </div>
-
-      <div class="space-y-2">
-        <div v-for="exam in sortedExams" :key="exam.id" class="p-4 bg-app-card dark:bg-app-darkCard border border-app-border dark:border-app-darkBorder rounded-2xl flex items-center justify-between shadow-sm">
-          <div class="space-y-1">
-            <div class="flex items-center gap-2">
-              <span class="text-xs font-bold px-2 py-0.5 rounded bg-amber-100 text-amber-800 dark:bg-amber-950 dark:text-amber-300">{{ getCourseCode(exam.courseId) }}</span>
-              <h3 class="font-bold text-sm">{{ exam.title }}</h3>
-            </div>
-            <p class="text-xs text-slate-400"><i class="fa-regular fa-clock mr-1"></i>{{ new Date(exam.date).toLocaleString('th-TH') }} • ห้องสอบ {{ exam.room }}</p>
-          </div>
-          <div class="flex items-center gap-2 shrink-0">
-            <span :class="getExamStatusBadge(exam.date).color" class="text-xs font-bold px-2.5 py-1 rounded-full">
-              {{ getExamStatusBadge(exam.date).label }}
-            </span>
-            <button @click="deleteExam(exam.id)" title="ลบกำหนดการสอบนี้" class="w-7 h-7 rounded-lg hover:bg-rose-100 dark:hover:bg-rose-950/50 text-slate-400 hover:text-rose-600 flex items-center justify-center text-xs transition">
+            
+            <button @click="deleteTask(task.id)" class="text-slate-400 hover:text-rose-600 p-1 text-xs shrink-0 transition" title="ลบงานนี้">
               <i class="fa-solid fa-trash-can"></i>
             </button>
           </div>
+
+          <!-- PROGRESS BAR & INTERACTIVE SLIDER -->
+          <div class="space-y-1 pt-1 border-t dark:border-slate-800/80">
+            <div class="flex justify-between text-[11px] font-mono">
+              <span class="text-slate-400">Progress:</span>
+              <span class="font-bold" :class="task.progress === 100 ? 'text-emerald-500' : 'text-indigo-600 dark:text-indigo-400'">
+                {{ getProgressBarVisual(task.progress || 0) }} {{ task.progress || 0 }}%
+              </span>
+            </div>
+            <div class="flex items-center gap-3">
+              <input type="range" min="0" max="100" step="10" v-model.number="task.progress" @change="onTaskProgressChange(task)" class="w-full accent-indigo-600 cursor-pointer h-1.5 bg-slate-200 dark:bg-slate-700 rounded-lg">
+              <span class="text-[10px] font-mono text-slate-400 shrink-0 w-8 text-right">{{ task.progress || 0 }}%</span>
+            </div>
+          </div>
         </div>
       </div>
-      <p v-if="currentTermExams.length === 0" class="text-slate-400 text-xs text-center py-6">ยังไม่มีกำหนดการสอบที่บันทึกไว้</p>
+      <p v-if="filteredTasks.length === 0" class="text-slate-400 text-xs text-center py-8 bg-slate-50 dark:bg-slate-800/40 rounded-xl">ไม่มีรายการงานในหมวดหมู่นี้</p>
     </main>
 
-    <!-- TAB 6: 🎓 GPAX -->
+    <!-- TAB 5: 🧪 EXAMS (DEDICATED EXAM HUB & COUNTDOWN) -->
+    <main v-if="activeTab === 'exams'" class="space-y-4">
+      <div class="flex justify-between items-center">
+        <div>
+          <h2 class="font-bold text-base">🧪 กำหนดการสอบ & นับถอยหลัง (Exams Hub)</h2>
+          <p class="text-xs text-slate-400">แยกอิสระจากระบบงาน พร้อมตัวนับถอยหลังระดับวินาที</p>
+        </div>
+        <button @click="showAddExamModal = true" class="px-3 py-1.5 bg-slate-900 dark:bg-white text-white dark:text-slate-900 text-xs font-bold rounded-xl shadow-sm hover:opacity-90 transition">
+          + เพิ่มวันสอบ
+        </button>
+      </div>
+
+      <!-- MAIN EXAM COUNTDOWN HERO BANNER -->
+      <section v-if="nextExam" class="bg-gradient-to-br from-slate-950 via-slate-900 to-indigo-950 text-white p-5 rounded-3xl shadow-md border border-slate-800 space-y-3">
+        <div class="flex flex-wrap justify-between items-center gap-2 border-b border-slate-800 pb-2.5">
+          <div class="flex items-center gap-2">
+            <span class="px-2 py-0.5 rounded text-[10px] font-mono font-bold bg-amber-400 text-slate-900 uppercase">NEXT EXAM</span>
+            <span class="font-mono text-xs font-bold text-amber-300">{{ getCourseCode(nextExam.courseId) }}</span>
+          </div>
+          <span :class="getExamStatusBadge(nextExam.date).color" class="text-xs font-bold px-2.5 py-0.5 rounded-full">
+            {{ getExamStatusBadge(nextExam.date).label }}
+          </span>
+        </div>
+
+        <div class="space-y-1">
+          <h3 class="text-base md:text-lg font-black tracking-tight font-mono">{{ nextExam.title }}</h3>
+          <p class="text-xs text-slate-300 flex items-center gap-3">
+            <span><i class="fa-regular fa-clock mr-1 text-amber-400"></i>{{ new Date(nextExam.date).toLocaleString('th-TH', { dateStyle: 'full', timeStyle: 'short' }) }}</span>
+            <span>•</span>
+            <span><i class="fa-solid fa-location-dot mr-1 text-rose-400"></i>ห้อง {{ nextExam.room || 'ไม่ระบุ' }}</span>
+          </p>
+        </div>
+
+        <!-- BIG DIGITAL COUNTDOWN TILES -->
+        <div class="grid grid-cols-4 gap-2 text-center py-3 bg-slate-900/80 rounded-2xl border border-slate-800 font-mono">
+          <div class="p-1.5"><p class="text-2xl md:text-3xl font-black text-amber-400">{{ examTimer.days }}</p><p class="text-[10px] text-slate-400 uppercase">DAYS</p></div>
+          <div class="p-1.5"><p class="text-2xl md:text-3xl font-black text-white">{{ examTimer.hours }}</p><p class="text-[10px] text-slate-400 uppercase">HOURS</p></div>
+          <div class="p-1.5"><p class="text-2xl md:text-3xl font-black text-white">{{ examTimer.minutes }}</p><p class="text-[10px] text-slate-400 uppercase">MINUTES</p></div>
+          <div class="p-1.5"><p class="text-2xl md:text-3xl font-black text-sky-400">{{ examTimer.seconds }}</p><p class="text-[10px] text-slate-400 uppercase">SECONDS</p></div>
+        </div>
+      </section>
+
+      <!-- TERMINAL-STYLE EXAM CARDS GRID -->
+      <div class="grid grid-cols-1 sm:grid-cols-2 gap-3">
+        <div v-for="exam in sortedExams" :key="exam.id"
+             class="bg-app-card dark:bg-app-darkCard border border-app-border dark:border-app-darkBorder rounded-2xl p-4 shadow-sm space-y-3 relative transition hover:border-indigo-400 font-mono">
+          <div class="flex justify-between items-start border-b dark:border-slate-800 pb-2">
+            <div>
+              <span class="text-[10px] font-bold px-2 py-0.5 rounded bg-amber-100 text-amber-900 dark:bg-amber-950/80 dark:text-amber-300 font-mono">
+                {{ getCourseCode(exam.courseId) }}
+              </span>
+              <h4 class="font-bold text-sm text-slate-800 dark:text-slate-100 mt-1 font-sans">{{ exam.title }}</h4>
+            </div>
+            <button @click="deleteExam(exam.id)" title="ลบกำหนดการสอบนี้" class="text-slate-400 hover:text-rose-600 p-1 text-xs transition">
+              <i class="fa-solid fa-trash-can"></i>
+            </button>
+          </div>
+
+          <div class="text-xs space-y-1.5 text-slate-600 dark:text-slate-300">
+            <p class="flex items-center gap-2">
+              <i class="fa-regular fa-calendar text-indigo-500 text-xs w-4"></i>
+              <span>{{ new Date(exam.date).toLocaleDateString('th-TH', { year: 'numeric', month: 'short', day: 'numeric' }) }}</span>
+            </p>
+            <p class="flex items-center gap-2">
+              <i class="fa-regular fa-clock text-amber-500 text-xs w-4"></i>
+              <span>{{ new Date(exam.date).toLocaleTimeString('th-TH', { hour: '2-digit', minute: '2-digit' }) }} น.</span>
+            </p>
+            <p class="flex items-center gap-2">
+              <i class="fa-solid fa-location-dot text-rose-500 text-xs w-4"></i>
+              <span>ห้องสอบ: {{ exam.room || '-' }}</span>
+            </p>
+          </div>
+
+          <div class="pt-2 border-t dark:border-slate-800 flex justify-between items-center text-xs">
+            <span class="text-indigo-600 dark:text-indigo-400 font-bold flex items-center gap-1">
+              <i class="fa-solid fa-hourglass-half"></i> {{ getExamDaysLeftLabel(exam.date) }}
+            </span>
+            <span :class="getExamStatusBadge(exam.date).color" class="text-[10px] font-bold px-2 py-0.5 rounded-full">
+              {{ getExamStatusBadge(exam.date).label }}
+            </span>
+          </div>
+        </div>
+      </div>
+      <p v-if="currentTermExams.length === 0" class="text-slate-400 text-xs text-center py-8 bg-slate-50 dark:bg-slate-800/40 rounded-xl">ยังไม่มีกำหนดการสอบที่บันทึกไว้</p>
+    </main>
+
+    <!-- TAB 6: 🎓 GPAX & 4-YEAR ACADEMIC PROGRESS -->
     <main v-if="activeTab === 'gpa'" class="space-y-4">
-      <section class="bg-app-card dark:bg-app-darkCard p-5 rounded-2xl border border-app-border dark:border-app-darkBorder shadow-sm space-y-4">
-        <h2 class="font-bold text-base">🎓 Real GPAX Calculator & Simulator</h2>
+      <!-- 4-YEAR DEGREE CREDITS PROGRESS -->
+      <section class="bg-app-card dark:bg-app-darkCard p-5 rounded-3xl border border-app-border dark:border-app-darkBorder shadow-sm space-y-3">
+        <div class="flex flex-wrap justify-between items-center gap-2 border-b dark:border-slate-800 pb-2.5">
+          <div>
+            <span class="text-[10px] font-mono font-bold uppercase text-indigo-600 dark:text-indigo-400">Graduation Progress</span>
+            <h3 class="font-bold text-base text-slate-800 dark:text-slate-100 flex items-center gap-2">
+              <i class="fa-solid fa-graduation-cap text-indigo-500"></i> ความก้าวหน้าหน่วยกิตสะสมสู่การสำเร็จการศึกษา
+            </h3>
+          </div>
+          <div class="flex items-center gap-2">
+            <span class="text-xs font-mono font-bold text-slate-500">เกณฑ์จบ:</span>
+            <input v-model.number="totalDegreeCreditsRequired" type="number" class="w-16 px-2 py-0.5 rounded-lg border border-app-border dark:border-app-darkBorder bg-slate-100 dark:bg-slate-800 text-xs font-mono font-bold text-center outline-none">
+            <span class="text-xs text-slate-400">หน่วยกิต</span>
+          </div>
+        </div>
+
+        <div class="space-y-1.5 font-mono">
+          <div class="flex justify-between items-center text-xs">
+            <span class="text-slate-500">Completed Credits:</span>
+            <span class="font-bold text-emerald-600 dark:text-emerald-400">
+              {{ degreeCreditsProgressPercent }}% ({{ totalCompletedCredits }} / {{ totalDegreeCreditsRequired }} Credits)
+            </span>
+          </div>
+          <!-- ASCII VISUAL BAR LIKE SPEC -->
+          <div class="w-full bg-slate-100 dark:bg-slate-800 rounded-full h-3 overflow-hidden p-0.5 border dark:border-slate-700">
+            <div class="bg-gradient-to-r from-indigo-500 via-teal-500 to-emerald-500 h-full rounded-full transition-all duration-500"
+                 :style="{ width: Math.min(degreeCreditsProgressPercent, 100) + '%' }"></div>
+          </div>
+          <p class="text-[11px] text-slate-400">
+            {{ getProgressBarVisual(degreeCreditsProgressPercent) }} {{ degreeCreditsProgressPercent }}% สะสมแล้ว {{ totalCompletedCredits }} หน่วยกิต (ยังขาดอีก {{ Math.max(0, totalDegreeCreditsRequired - totalCompletedCredits) }} หน่วยกิต)
+          </p>
+        </div>
+      </section>
+
+      <!-- 4-YEAR ACADEMIC PROGRESSION TABLE (YEAR 1 TO YEAR 4) -->
+      <section class="bg-app-card dark:bg-app-darkCard p-5 rounded-3xl border border-app-border dark:border-app-darkBorder shadow-sm space-y-4">
+        <div class="flex justify-between items-center border-b dark:border-slate-800 pb-2.5">
+          <div>
+            <h3 class="font-bold text-base text-slate-800 dark:text-slate-100 flex items-center gap-2">
+              <i class="fa-solid fa-chart-line text-blue-500"></i> ACADEMIC PROGRESS (ประวัติผลการเรียน 4 ปี)
+            </h3>
+            <p class="text-xs text-slate-400">บันทึกและติดตามเกรดเฉลี่ยรายภาคเรียนตั้งแต่ปี 1 จนถึงปี 4</p>
+          </div>
+          <div class="text-right">
+            <span class="text-[10px] uppercase font-mono text-slate-400 block">GPAX สะสมรวม</span>
+            <span class="text-xl font-black font-mono text-indigo-600 dark:text-indigo-400">{{ overallCalculatedGPAX.toFixed(2) }}</span>
+          </div>
+        </div>
+
+        <!-- 4-YEAR GRID TILES -->
+        <div class="grid grid-cols-1 sm:grid-cols-2 md:grid-cols-4 gap-3">
+          <div v-for="year in academicYears" :key="year.yearNumber"
+               class="p-3.5 rounded-2xl border bg-slate-50/70 dark:bg-slate-800/50 border-slate-200 dark:border-slate-700/80 space-y-2.5">
+            <div class="flex items-center justify-between border-b dark:border-slate-700/60 pb-1.5">
+              <span class="font-bold text-xs text-slate-700 dark:text-slate-200">{{ year.label }}</span>
+              <span class="text-[10px] font-mono px-1.5 py-0.5 rounded bg-slate-200 dark:bg-slate-700 text-slate-600 dark:text-slate-300">
+                {{ year.academicYearBE }}
+              </span>
+            </div>
+
+            <!-- Semesters breakdown for this year -->
+            <div class="space-y-2 text-xs font-mono">
+              <div class="flex justify-between items-center">
+                <span class="text-slate-500">Semester 1:</span>
+                <input v-model.number="year.sem1GPA" type="number" step="0.01" placeholder="—" class="w-14 text-right px-1.5 py-0.5 rounded bg-white dark:bg-slate-900 border border-slate-200 dark:border-slate-700 text-xs font-bold text-indigo-600 dark:text-indigo-400 outline-none">
+              </div>
+              <div class="flex justify-between items-center">
+                <span class="text-slate-500">Semester 2:</span>
+                <input v-model.number="year.sem2GPA" type="number" step="0.01" placeholder="—" class="w-14 text-right px-1.5 py-0.5 rounded bg-white dark:bg-slate-900 border border-slate-200 dark:border-slate-700 text-xs font-bold text-indigo-600 dark:text-indigo-400 outline-none">
+              </div>
+              <div class="pt-1.5 border-t dark:border-slate-700/60 flex justify-between text-[11px] text-slate-400">
+                <span>Avg Year GPA:</span>
+                <span class="font-bold text-slate-700 dark:text-slate-200">{{ getYearAverageGPA(year) }}</span>
+              </div>
+            </div>
+          </div>
+        </div>
+      </section>
+
+      <!-- REAL GPAX CALCULATOR & TARGET SIMULATOR -->
+      <section class="bg-app-card dark:bg-app-darkCard p-5 rounded-3xl border border-app-border dark:border-app-darkBorder shadow-sm space-y-4">
+        <h3 class="font-bold text-base flex items-center gap-2">
+          <i class="fa-solid fa-calculator text-indigo-500"></i> GPAX Target Simulator (คำนวณเป้าหมายเกรดเฉลี่ยเทอมนี้)
+        </h3>
 
         <div class="grid grid-cols-1 md:grid-cols-3 gap-3">
           <div class="p-3 bg-slate-50 dark:bg-slate-800/50 rounded-xl border border-app-border dark:border-app-darkBorder">
             <label class="text-[11px] text-slate-400 font-bold block">GPAX ปัจจุบัน</label>
-            <input v-model.number="gpaxInput.currentGPAX" type="number" step="0.01" class="w-full text-xl font-black bg-transparent outline-none text-blue-600 dark:text-sky-400">
+            <input v-model.number="gpaxInput.currentGPAX" type="number" step="0.01" class="w-full text-xl font-black bg-transparent outline-none text-blue-600 dark:text-sky-400 font-mono">
           </div>
           <div class="p-3 bg-slate-50 dark:bg-slate-800/50 rounded-xl border border-app-border dark:border-app-darkBorder">
             <label class="text-[11px] text-slate-400 font-bold block">หน่วยกิตสะสมเดิม</label>
-            <input v-model.number="gpaxInput.pastCredits" type="number" class="w-full text-xl font-black bg-transparent outline-none text-slate-700 dark:text-slate-200">
+            <input v-model.number="gpaxInput.pastCredits" type="number" class="w-full text-xl font-black bg-transparent outline-none text-slate-700 dark:text-slate-200 font-mono">
           </div>
           <div class="p-3 bg-slate-50 dark:bg-slate-800/50 rounded-xl border border-app-border dark:border-app-darkBorder">
             <label class="text-[11px] text-slate-400 font-bold block">🎯 Target GPAX เป้าหมาย</label>
-            <input v-model.number="gpaxInput.targetGPAX" type="number" step="0.01" class="w-full text-xl font-black bg-transparent outline-none text-amber-500">
+            <input v-model.number="gpaxInput.targetGPAX" type="number" step="0.01" class="w-full text-xl font-black bg-transparent outline-none text-amber-500 font-mono">
           </div>
         </div>
 
-        <div class="p-4 bg-blue-50 dark:bg-blue-950/40 border border-blue-200 dark:border-blue-900/60 rounded-xl text-xs space-y-1.5">
-          <p class="font-bold text-blue-900 dark:text-blue-300">💡 ผลการคำนวณถ่วงน้ำหนักหน่วยกิตจริง (เทอมนี้ {{ currentTermTotalCredits }} หน่วยกิต):</p>
+        <div class="p-4 bg-indigo-50 dark:bg-indigo-950/40 border border-indigo-200 dark:border-indigo-900/60 rounded-xl text-xs space-y-1.5">
+          <p class="font-bold text-indigo-900 dark:text-indigo-300">💡 การวิเคราะห์ถ่วงน้ำหนักเทอม {{ selectedSemester }} ({{ currentTermTotalCredits }} หน่วยกิต):</p>
           <p class="text-slate-700 dark:text-slate-200 leading-relaxed">{{ realTargetAnalysisMessage }}</p>
         </div>
 
         <div class="grid grid-cols-2 gap-3 text-xs">
           <div class="p-3 bg-emerald-50 dark:bg-emerald-950/30 border border-emerald-200 dark:border-emerald-900/50 rounded-xl text-center">
-            <p class="text-slate-500">ถ้าได้ A ทุกวิชาในเทอมนี้ (Best Case)</p>
-            <p class="text-xl font-bold text-emerald-600 dark:text-emerald-400 mt-1">{{ calculatedBestCaseGPAX }}</p>
+            <p class="text-slate-500">ถ้าได้เกรด A ทุกวิชาในเทอมนี้ (Best Case)</p>
+            <p class="text-xl font-bold font-mono text-emerald-600 dark:text-emerald-400 mt-1">{{ calculatedBestCaseGPAX }}</p>
           </div>
           <div class="p-3 bg-slate-100 dark:bg-slate-800 border border-app-border dark:border-app-darkBorder rounded-xl text-center">
-            <p class="text-slate-500">ถ้าได้ B+ ทุกวิชาในเทอมนี้ (Mid Case)</p>
-            <p class="text-xl font-bold text-slate-700 dark:text-slate-200 mt-1">{{ calculatedMidCaseGPAX }}</p>
+            <p class="text-slate-500">ถ้าได้เกรด B+ ทุกวิชาในเทอมนี้ (Mid Case)</p>
+            <p class="text-xl font-bold font-mono text-slate-700 dark:text-slate-200 mt-1">{{ calculatedMidCaseGPAX }}</p>
           </div>
         </div>
       </section>
@@ -483,50 +1065,253 @@
       </div>
     </div>
 
-    <!-- MODAL 1: MINIMAL AI SCANNER -->
+    <!-- MODAL 1: ENHANCED AI SCANNER WITH TYPE SELECTION & REVIEW -->
     <div v-if="showUploadModal" class="fixed inset-0 bg-black/60 backdrop-blur-sm flex items-center justify-center p-4 z-50">
-      <div class="bg-app-card dark:bg-app-darkCard border border-app-border dark:border-app-darkBorder rounded-2xl p-5 max-w-sm w-full space-y-4 shadow-xl transition-all">
-        <div class="flex justify-between items-center border-b dark:border-slate-800 pb-3">
-          <h3 class="font-bold text-sm flex items-center gap-2 text-slate-800 dark:text-slate-100">
-            <i class="fa-solid fa-wand-magic-sparkles text-indigo-500"></i> AI Schedule Scanner
-          </h3>
-          <button @click="closeUploadModal" class="text-slate-400 hover:text-slate-600"><i class="fa-solid fa-xmark text-base"></i></button>
+      <div class="bg-app-card dark:bg-app-darkCard border border-app-border dark:border-app-darkBorder rounded-2xl p-5 max-w-lg w-full space-y-4 shadow-xl transition-all max-h-[90vh] flex flex-col">
+        <!-- MODAL HEADER -->
+        <div class="flex justify-between items-center border-b dark:border-slate-800 pb-3 shrink-0">
+          <div>
+            <h3 class="font-bold text-sm md:text-base flex items-center gap-2 text-slate-800 dark:text-slate-100">
+              <i class="fa-solid fa-wand-magic-sparkles text-indigo-500"></i>
+              <span v-if="!scanReviewMode">AI Schedule & Exam Scanner</span>
+              <span v-else>ตรวจสอบและยืนยันข้อมูลที่สแกนได้</span>
+            </h3>
+            <p class="text-[11px] text-slate-400">
+              <span v-if="!scanReviewMode">เลือกประเภทเอกสารและอัปโหลดรูปเพื่อความแม่นยำสูงสุด</span>
+              <span v-else>ตรวจสอบความถูกต้อง ปรับแก้ หรือลบรายการที่อ่านผิดก่อนบันทึก</span>
+            </p>
+          </div>
+          <button @click="closeUploadModal" class="text-slate-400 hover:text-slate-600"><i class="fa-solid fa-xmark text-lg"></i></button>
         </div>
 
-        <div class="space-y-3">
-          <!-- IMAGE UPLOAD AREA -->
+        <!-- STAGE 1: UPLOAD & CONFIGURATION VIEW -->
+        <div v-if="!scanReviewMode" class="space-y-4 overflow-y-auto pr-1">
+          <!-- 1. DOCUMENT TYPE SELECTOR (Class Schedule vs Exam Schedule vs Auto) -->
+          <div class="space-y-1.5">
+            <label class="block text-xs font-bold text-slate-700 dark:text-slate-200">
+              <i class="fa-solid fa-layer-group text-indigo-500 mr-1"></i> ประเภทเอกสารที่ต้องการสแกน:
+            </label>
+            <div class="grid grid-cols-3 gap-2 p-1 bg-slate-100 dark:bg-slate-800/80 rounded-xl">
+              <!-- Option 1: Class Schedule -->
+              <button type="button" @click="selectedScanType = 'CLASS_SCHEDULE'"
+                      :class="selectedScanType === 'CLASS_SCHEDULE' ? 'bg-white dark:bg-slate-900 text-indigo-600 dark:text-indigo-400 shadow-sm border border-indigo-200 dark:border-indigo-800' : 'text-slate-500 hover:text-slate-800 dark:hover:text-slate-200 border border-transparent'"
+                      class="py-2 px-1.5 rounded-lg text-center transition flex flex-col items-center gap-1 cursor-pointer">
+                <i class="fa-solid fa-calendar-days text-base"></i>
+                <span class="text-xs font-bold">ตารางเรียน</span>
+                <span class="text-[9px] text-slate-400">วัน/เวลา/วิชา</span>
+              </button>
+
+              <!-- Option 2: Exam Schedule -->
+              <button type="button" @click="selectedScanType = 'EXAM_SCHEDULE'"
+                      :class="selectedScanType === 'EXAM_SCHEDULE' ? 'bg-white dark:bg-slate-900 text-rose-600 dark:text-rose-400 shadow-sm border border-rose-200 dark:border-rose-800' : 'text-slate-500 hover:text-slate-800 dark:hover:text-slate-200 border border-transparent'"
+                      class="py-2 px-1.5 rounded-lg text-center transition flex flex-col items-center gap-1 cursor-pointer">
+                <i class="fa-solid fa-file-pen text-base"></i>
+                <span class="text-xs font-bold">ตารางสอบ</span>
+                <span class="text-[9px] text-slate-400">วันสอบ/ห้องสอบ</span>
+              </button>
+
+              <!-- Option 3: Auto Detect -->
+              <button type="button" @click="selectedScanType = 'AUTO'"
+                      :class="selectedScanType === 'AUTO' ? 'bg-white dark:bg-slate-900 text-amber-600 dark:text-amber-400 shadow-sm border border-amber-200 dark:border-amber-800' : 'text-slate-500 hover:text-slate-800 dark:hover:text-slate-200 border border-transparent'"
+                      class="py-2 px-1.5 rounded-lg text-center transition flex flex-col items-center gap-1 cursor-pointer">
+                <i class="fa-solid fa-bolt text-base"></i>
+                <span class="text-xs font-bold">ตรวจหาคู่</span>
+                <span class="text-[9px] text-slate-400">เรียน & สอบ</span>
+              </button>
+            </div>
+            <p class="text-[10px] text-slate-400 italic">
+              💡 แนะนำ: เลือกให้ตรงกับรูปภาพเพื่อความแม่นยำในการแยกแยะข้อมูลและป้องกันความผิดพลาด
+            </p>
+          </div>
+
+          <!-- 2. AI MODEL SELECTION -->
+          <div class="space-y-1.5 text-left">
+            <div class="flex items-center justify-between text-xs font-bold text-slate-700 dark:text-slate-200">
+              <span class="flex items-center gap-1.5">
+                <i class="fa-solid fa-microchip text-indigo-500"></i> โมเดล AI ที่ต้องการใช้ (Gemini)
+              </span>
+              <span class="text-[10px] text-indigo-600 dark:text-indigo-400 font-semibold bg-indigo-50 dark:bg-indigo-950/60 px-2 py-0.5 rounded-full border border-indigo-200 dark:border-indigo-900">
+                รองรับ 6 รุ่นพร้อม Fallback
+              </span>
+            </div>
+            <select v-model="selectedGeminiModel" class="w-full bg-slate-50 dark:bg-slate-800 border border-slate-200 dark:border-slate-700 rounded-xl px-3 py-2 text-xs font-medium text-slate-700 dark:text-slate-200 outline-none focus:border-indigo-500 transition cursor-pointer">
+              <option value="auto">✨ สลับโมเดลอัตโนมัติ (Auto Fallback: 3.8 Flash ➔ 3.7 ➔ 3.6 ➔ 3.5 ➔ 3.5 Lite ➔ 3.1 Lite)</option>
+              <option value="gemini-3.8-flash">⚡ Gemini 3.8 Flash (โมเดลหลัก)</option>
+              <option value="gemini-3.7-flash">🚀 Gemini 3.7 Flash</option>
+              <option value="gemini-3.6-flash">✨ Gemini 3.6 Flash</option>
+              <option value="gemini-3.5-flash">🔥 Gemini 3.5 Flash</option>
+              <option value="gemini-3.5-flash-lite">🌱 Gemini 3.5 Flash Lite</option>
+              <option value="gemini-3.1-flash-lite">🍃 Gemini 3.1 Flash Lite</option>
+            </select>
+          </div>
+
+          <!-- 3. IMAGE / PDF UPLOAD AREA -->
           <div class="border-2 border-dashed border-indigo-200 dark:border-indigo-900/60 rounded-2xl p-5 text-center space-y-2 relative bg-indigo-50/30 dark:bg-indigo-950/20 hover:bg-indigo-50/60 transition">
-            <input type="file" ref="fileInput" @change="handleFileUpload" accept="image/*" class="absolute inset-0 opacity-0 cursor-pointer w-full h-full z-10" :disabled="isScanning">
+            <input type="file" ref="fileInput" @change="handleFileUpload" accept="image/*,application/pdf" class="absolute inset-0 opacity-0 cursor-pointer w-full h-full z-10" :disabled="isScanning">
             <div v-if="previewImageUrl" class="space-y-2">
-              <img :src="previewImageUrl" class="max-h-40 mx-auto rounded-xl shadow border border-slate-200 dark:border-slate-700">
+              <img v-if="isPdfSelected" src="https://cdn-icons-png.flaticon.com/512/337/337946.png" class="max-h-24 mx-auto object-contain">
+              <img v-else :src="previewImageUrl" class="max-h-48 mx-auto rounded-xl shadow border border-slate-200 dark:border-slate-700 object-contain">
               <p class="text-[11px] text-emerald-600 dark:text-emerald-400 font-medium flex items-center justify-center gap-1">
-                <i class="fa-solid fa-circle-check"></i> พร้อมสแกนรูปภาพนี้
+                <i class="fa-solid fa-circle-check"></i> พร้อมสแกน: {{ selectedScanFile?.name }} (แตะเพื่อเปลี่ยนไฟล์)
               </p>
             </div>
-            <div v-else class="space-y-1.5 py-2">
+            <div v-else class="space-y-2 py-4">
               <i class="fa-solid fa-cloud-arrow-up text-3xl text-indigo-500"></i>
-              <p class="text-xs font-semibold text-slate-700 dark:text-slate-200">อัปโหลดรูปตารางเรียน / วันสอบ</p>
-              <p class="text-[10px] text-slate-400">แตะเพื่อเลือกรูปภาพ หรือ ลากไฟล์มาวางที่นี่</p>
+              <p class="text-xs font-bold text-slate-700 dark:text-slate-200">อัปโหลดรูป / PDF {{ scanTypeLabel }}</p>
+              <p class="text-[11px] text-slate-400">แตะเพื่อเลือกรูปภาพ หรือ ลากไฟล์เอกสารมาวางที่นี่ (PNG, JPG, WEBP, PDF)</p>
             </div>
+          </div>
+
+          <!-- ERROR / 503 NOTICE BANNER -->
+          <div v-if="scanErrorMessage" class="p-3.5 bg-amber-50 dark:bg-amber-950/40 border border-amber-300 dark:border-amber-700/60 rounded-xl space-y-2.5 text-left animate-fadeIn">
+            <div class="flex items-start gap-2.5">
+              <div class="w-8 h-8 rounded-lg bg-amber-100 dark:bg-amber-900/60 text-amber-600 dark:text-amber-400 flex items-center justify-center shrink-0">
+                <i class="fa-solid fa-triangle-exclamation text-sm"></i>
+              </div>
+              <div class="flex-1 min-w-0">
+                <p class="text-xs font-bold text-amber-900 dark:text-amber-200">
+                  {{ scanErrorMessage.includes('503') || scanErrorMessage.includes('หนาแน่น') ? 'โมเดล AI กำลังมีผู้ใช้งานหนาแน่นชั่วคราว (503)' : 'การสแกนไม่สำเร็จ' }}
+                </p>
+                <p class="text-[11px] text-amber-800 dark:text-amber-300 mt-0.5 leading-relaxed">
+                  {{ scanErrorMessage }}
+                </p>
+                <p class="text-[10px] text-slate-500 dark:text-slate-400 mt-1">
+                  💡 ระบบได้บันทึกไฟล์ของคุณไว้แล้ว คุณสามารถกดปุ่ม <b>"ลองอีกครั้ง"</b> หรือทดลองด้วย <b>"ตารางเรียนตัวอย่าง"</b> ได้ทันที
+                </p>
+              </div>
+            </div>
+            <div class="flex flex-wrap gap-2 pt-1 border-t border-amber-200/60 dark:border-amber-800/40">
+              <button @click="processScanWithGemini" class="px-3 py-1.5 bg-indigo-600 hover:bg-indigo-700 text-white font-bold rounded-lg text-xs transition shadow-sm flex items-center gap-1.5 cursor-pointer">
+                <i class="fa-solid fa-rotate-right"></i> ลองสแกนอีกครั้ง
+              </button>
+              <button @click="loadDemoSchedule" class="px-3 py-1.5 bg-amber-200/70 hover:bg-amber-200 dark:bg-amber-900/40 dark:hover:bg-amber-800/60 text-amber-900 dark:text-amber-200 font-bold rounded-lg text-xs transition flex items-center gap-1.5 cursor-pointer">
+                <i class="fa-solid fa-wand-magic-sparkles"></i> โหลดตารางตัวอย่าง
+              </button>
+              <button @click="closeUploadModal(); showAddCourseModal = true;" class="px-3 py-1.5 bg-slate-200 dark:bg-slate-700 hover:bg-slate-300 dark:hover:bg-slate-600 text-slate-700 dark:text-slate-200 font-bold rounded-lg text-xs transition flex items-center gap-1.5 cursor-pointer">
+                <i class="fa-solid fa-pen-to-square"></i> กรอกด้วยตนเอง
+              </button>
+            </div>
+          </div>
+
+          <!-- SCANNING LOADING STATE -->
+          <div v-if="isScanning" class="p-4 bg-indigo-50 dark:bg-indigo-950/40 border border-indigo-200 dark:border-indigo-900 rounded-xl text-center space-y-2.5">
+            <div class="flex items-center justify-center gap-2">
+              <i class="fa-solid fa-spinner animate-spin text-indigo-600 text-2xl"></i>
+              <span v-if="isRetrying" class="text-xs font-bold text-amber-600 dark:text-amber-400 animate-pulse">กำลังสลับโมเดลสำรองอัตโนมัติ...</span>
+            </div>
+            <p class="text-xs font-bold text-indigo-900 dark:text-indigo-300">AI กำลังประมวลผล OCR และสกัดข้อมูล{{ scanTypeLabel }}...</p>
+            <p class="text-[11px] text-slate-400">ระบบมี Fallback ป้องกัน 503 อัตโนมัติ กรุณารอสักครู่</p>
+            <button @click="cancelScanning" class="px-3 py-1 bg-rose-500 hover:bg-rose-600 text-white font-semibold rounded-lg text-[11px] transition shadow-sm cursor-pointer">
+              <i class="fa-solid fa-ban mr-1"></i> ยกเลิกการสแกน & เลือกรูปใหม่
+            </button>
+          </div>
+
+          <!-- FOOTER BUTTONS STAGE 1 -->
+          <div v-else class="flex gap-2 pt-2 border-t dark:border-slate-800">
+            <button @click="closeUploadModal" class="w-1/3 py-2.5 bg-slate-100 dark:bg-slate-800 hover:bg-slate-200 dark:hover:bg-slate-700 text-slate-600 dark:text-slate-300 font-bold rounded-xl text-xs transition">ปิด</button>
+            <button @click="processScanWithGemini" :disabled="!selectedScanFile" 
+                    class="w-2/3 py-2.5 bg-indigo-600 hover:bg-indigo-700 disabled:opacity-50 text-white font-bold rounded-xl text-xs shadow flex items-center justify-center gap-1.5 transition cursor-pointer disabled:cursor-not-allowed">
+              <i class="fa-solid fa-bolt"></i> เริ่มสแกน{{ scanTypeLabel }}
+            </button>
           </div>
         </div>
 
-        <!-- SCANNING LOADING STATE WITH CANCEL OPTION -->
-        <div v-if="isScanning" class="p-3.5 bg-indigo-50 dark:bg-indigo-950/40 border border-indigo-200 dark:border-indigo-900 rounded-xl text-center space-y-2">
-          <i class="fa-solid fa-spinner animate-spin text-indigo-600 text-2xl"></i>
-          <p class="text-xs font-semibold text-indigo-900 dark:text-indigo-300">AI กำลังประมวลผลรูปภาพ...</p>
-          <button @click="cancelScanning" class="px-3 py-1 bg-rose-500 hover:bg-rose-600 text-white font-semibold rounded-lg text-[11px] transition shadow-sm">
-            <i class="fa-solid fa-ban mr-1"></i> ยกเลิกการสแกน & เลือกรูปใหม่
-          </button>
-        </div>
+        <!-- STAGE 2: REVIEW & EDIT BEFORE IMPORT -->
+        <div v-else class="space-y-3 overflow-y-auto flex-1 pr-1">
+          <!-- Summary Header -->
+          <div class="p-2.5 bg-indigo-50/70 dark:bg-indigo-950/40 rounded-xl border border-indigo-200 dark:border-indigo-900 flex flex-wrap justify-between items-center gap-2 text-xs">
+            <div class="flex items-center gap-2">
+              <span class="font-bold text-indigo-900 dark:text-indigo-200">
+                📊 พบวิชาเรียน: {{ scannedCourses.length }} วิชา | สอบ: {{ scannedExams.length }} รายการ
+              </span>
+              <span v-if="lastScannedModel" class="text-[10px] px-2 py-0.5 rounded-full bg-indigo-200/70 dark:bg-indigo-900/70 text-indigo-800 dark:text-indigo-300 font-mono font-medium flex items-center gap-1">
+                <i class="fa-solid fa-microchip"></i> {{ lastScannedModel }}
+              </span>
+            </div>
+            <span class="text-[11px] text-indigo-600 dark:text-indigo-400 font-semibold">
+              พร้อมนำเข้า: {{ validScannedCoursesToImport.length + validScannedExamsToImport.length }} รายการ
+            </span>
+          </div>
 
-        <!-- FOOTER BUTTONS -->
-        <div v-else class="flex gap-2">
-          <button @click="closeUploadModal" class="w-1/3 py-2 bg-slate-100 dark:bg-slate-800 text-slate-600 dark:text-slate-300 font-bold rounded-xl text-xs">ปิด</button>
-          <button @click="processScanWithGemini" :disabled="!selectedScanFile" 
-                  class="w-2/3 py-2 bg-indigo-600 hover:bg-indigo-700 disabled:opacity-50 text-white font-bold rounded-xl text-xs shadow flex items-center justify-center gap-1.5 transition">
-            <i class="fa-solid fa-bolt"></i> เริ่มสแกนตาราง
-          </button>
+          <!-- 1. COURSES REVIEW LIST -->
+          <div v-if="scannedCourses.length > 0" class="space-y-2">
+            <h4 class="font-bold text-xs text-slate-700 dark:text-slate-200 flex items-center gap-1.5">
+              <i class="fa-solid fa-calendar-days text-indigo-500"></i> รายวิชาที่ตรวจพบ ({{ scannedCourses.length }} วิชา)
+            </h4>
+            
+            <div class="space-y-1.5 max-h-52 overflow-y-auto">
+              <div v-for="(course, idx) in scannedCourses" :key="course.id"
+                   class="p-2.5 rounded-xl border transition text-xs flex items-center justify-between gap-2"
+                   :class="course.isDuplicate
+                     ? 'bg-amber-50/70 dark:bg-amber-950/30 border-amber-200 dark:border-amber-900/60 opacity-85'
+                     : 'bg-slate-50 dark:bg-slate-800/60 border-slate-200 dark:border-slate-700'">
+                
+                <div class="flex items-center gap-2 flex-1 min-w-0">
+                  <input type="checkbox" v-model="course.selected" :disabled="course.isDuplicate" class="w-4 h-4 accent-indigo-600 shrink-0 cursor-pointer">
+                  <div class="min-w-0 flex-1">
+                    <div class="flex items-center gap-1.5 flex-wrap">
+                      <span class="font-mono font-bold px-1.5 py-0.5 rounded bg-blue-100 text-blue-800 dark:bg-blue-900/60 dark:text-blue-300 text-[10px]">{{ course.code }}</span>
+                      <span class="font-bold text-xs truncate">{{ course.name }}</span>
+                      <span v-if="course.isDuplicate" class="text-[9px] font-bold px-1.5 py-0.5 rounded bg-amber-200 text-amber-900 dark:bg-amber-900 dark:text-amber-200">
+                        ⚠️ รหัสวิชาซ้ำในระบบ (จะถูกข้าม)
+                      </span>
+                    </div>
+                    <p class="text-[10px] text-slate-400 mt-0.5">
+                      {{ course.schedule?.day }} {{ course.schedule?.start }}-{{ course.schedule?.end }} • ห้อง {{ course.schedule?.room }} • {{ course.credit }} หน่วยกิต
+                    </p>
+                  </div>
+                </div>
+
+                <!-- Delete misdetected course button -->
+                <button @click="removeScannedCourse(idx)" title="ลบรายการนี้ออก" class="w-7 h-7 rounded-lg hover:bg-rose-100 dark:hover:bg-rose-950 text-slate-400 hover:text-rose-600 flex items-center justify-center shrink-0 transition">
+                  <i class="fa-solid fa-trash-can text-xs"></i>
+                </button>
+              </div>
+            </div>
+          </div>
+
+          <!-- 2. EXAMS REVIEW LIST -->
+          <div v-if="scannedExams.length > 0" class="space-y-2">
+            <h4 class="font-bold text-xs text-slate-700 dark:text-slate-200 flex items-center gap-1.5">
+              <i class="fa-solid fa-file-pen text-rose-500"></i> กำหนดการสอบที่ตรวจพบ ({{ scannedExams.length }} รายการ)
+            </h4>
+            
+            <div class="space-y-1.5 max-h-40 overflow-y-auto">
+              <div v-for="(exam, idx) in scannedExams" :key="exam.id"
+                   class="p-2.5 rounded-xl border bg-slate-50 dark:bg-slate-800/60 border-slate-200 dark:border-slate-700 text-xs flex items-center justify-between gap-2">
+                
+                <div class="flex items-center gap-2 flex-1 min-w-0">
+                  <input type="checkbox" v-model="exam.selected" class="w-4 h-4 accent-rose-600 shrink-0 cursor-pointer">
+                  <div class="min-w-0 flex-1">
+                    <div class="flex items-center gap-1.5">
+                      <span v-if="exam.courseCode" class="font-mono font-bold px-1.5 py-0.5 rounded bg-rose-100 text-rose-800 dark:bg-rose-900/60 dark:text-rose-300 text-[10px]">{{ exam.courseCode }}</span>
+                      <span class="font-bold text-xs truncate">{{ exam.title }}</span>
+                    </div>
+                    <p class="text-[10px] text-slate-400 mt-0.5">
+                      <i class="fa-regular fa-clock mr-1"></i>{{ exam.date ? new Date(exam.date).toLocaleString('th-TH', { dateStyle: 'medium', timeStyle: 'short' }) : '-' }} • ห้อง {{ exam.room }}
+                    </p>
+                  </div>
+                </div>
+
+                <!-- Delete misdetected exam button -->
+                <button @click="removeScannedExam(idx)" title="ลบรายการนี้ออก" class="w-7 h-7 rounded-lg hover:bg-rose-100 dark:hover:bg-rose-950 text-slate-400 hover:text-rose-600 flex items-center justify-center shrink-0 transition">
+                  <i class="fa-solid fa-trash-can text-xs"></i>
+                </button>
+              </div>
+            </div>
+          </div>
+
+          <!-- FOOTER BUTTONS STAGE 2 -->
+          <div class="flex gap-2 pt-2 border-t dark:border-slate-800 shrink-0">
+            <button @click="scanReviewMode = false" class="w-1/3 py-2.5 bg-slate-100 dark:bg-slate-800 hover:bg-slate-200 dark:hover:bg-slate-700 text-slate-600 dark:text-slate-300 font-bold rounded-xl text-xs transition">
+              ← สแกนใหม่
+            </button>
+            <button @click="confirmImportScannedData" 
+                    :disabled="validScannedCoursesToImport.length === 0 && validScannedExamsToImport.length === 0"
+                    class="w-2/3 py-2.5 bg-emerald-600 hover:bg-emerald-700 disabled:opacity-50 text-white font-bold rounded-xl text-xs shadow flex items-center justify-center gap-1.5 transition cursor-pointer disabled:cursor-not-allowed">
+              <i class="fa-solid fa-circle-check"></i> ยืนยันนำเข้าข้อมูล ({{ validScannedCoursesToImport.length + validScannedExamsToImport.length }})
+            </button>
+          </div>
         </div>
       </div>
     </div>
@@ -585,36 +1370,137 @@
       </div>
     </div>
 
-    <!-- MODAL 4: COURSE DETAIL MODAL -->
-    <div v-if="selectedCourse" class="fixed inset-0 bg-black/50 backdrop-blur-sm flex items-center justify-center p-4 z-50">
-      <div class="bg-app-card dark:bg-app-darkCard border border-app-border dark:border-app-darkBorder rounded-2xl p-5 max-w-md w-full space-y-4 shadow-xl">
-        <div class="flex justify-between items-start">
+    <!-- MODAL 4: DEEP COURSE ENTITY & NOTES WITH AI SUMMARIZER -->
+    <div v-if="selectedCourse" class="fixed inset-0 bg-black/60 backdrop-blur-sm flex items-center justify-center p-4 z-50">
+      <div class="bg-app-card dark:bg-app-darkCard border border-app-border dark:border-app-darkBorder rounded-3xl p-5 max-w-lg w-full space-y-4 shadow-2xl max-h-[90vh] flex flex-col">
+        <!-- MODAL HEADER -->
+        <div class="flex justify-between items-start border-b dark:border-slate-800 pb-3 shrink-0">
           <div>
-            <span class="text-xs font-bold px-2 py-0.5 rounded bg-blue-100 text-blue-800 dark:bg-blue-900/60 dark:text-blue-300">{{ selectedCourse.code }}</span>
-            <h3 class="font-bold text-lg mt-1">{{ selectedCourse.name }}</h3>
-          </div>
-          <button @click="selectedCourse = null" class="text-slate-400"><i class="fa-solid fa-xmark text-lg"></i></button>
-        </div>
-
-        <div class="text-xs space-y-1 text-slate-500 border-b pb-3">
-          <p>👨‍🏫 <strong>อาจารย์:</strong> {{ selectedCourse.instructor }}</p>
-          <p>📍 <strong>ห้องเรียน:</strong> {{ selectedCourse.schedule.room }}</p>
-          <p>⏰ <strong>เวลาเรียน:</strong> {{ selectedCourse.schedule.day }} {{ selectedCourse.schedule.start }}-{{ selectedCourse.schedule.end }}</p>
-          <p>💎 <strong>หน่วยกิต:</strong> {{ selectedCourse.credit }} หน่วยกิต</p>
-        </div>
-
-        <div class="space-y-1">
-          <h4 class="font-bold text-xs text-slate-700 dark:text-slate-300">📝 งานและการบ้านวิชานี้</h4>
-          <div class="space-y-1 max-h-24 overflow-y-auto">
-            <div v-for="t in tasks.filter(t => t.courseId === selectedCourse.id)" :key="t.id" class="text-xs p-1.5 bg-slate-50 dark:bg-slate-800 rounded flex justify-between">
-              <span>• {{ t.title }}</span>
-              <span class="text-[10px] text-slate-400">{{ t.deadline }}</span>
+            <div class="flex items-center gap-2">
+              <span class="text-xs font-mono font-bold px-2 py-0.5 rounded bg-blue-100 text-blue-800 dark:bg-blue-900/60 dark:text-blue-300">{{ selectedCourse.code }}</span>
+              <span class="text-xs font-mono font-bold text-slate-400">{{ selectedCourse.credit }} หน่วยกิต</span>
             </div>
-            <p v-if="tasks.filter(t => t.courseId === selectedCourse.id).length === 0" class="text-[11px] text-slate-400 italic">ไม่มีงานในวิชานี้</p>
+            <h3 class="font-bold text-base md:text-lg mt-1 text-slate-800 dark:text-slate-100">{{ selectedCourse.name }}</h3>
+          </div>
+          <button @click="selectedCourse = null" class="text-slate-400 hover:text-slate-600"><i class="fa-solid fa-xmark text-lg"></i></button>
+        </div>
+
+        <!-- ENTITY SUB-TABS (Notes, Tasks, Exams, Info) -->
+        <div class="flex items-center gap-1 bg-slate-100 dark:bg-slate-800 p-1 rounded-xl text-xs font-semibold shrink-0">
+          <button @click="courseModalTab = 'notes'" :class="courseModalTab === 'notes' ? 'bg-white dark:bg-slate-900 text-indigo-600 dark:text-indigo-400 shadow-xs' : 'text-slate-500'" class="flex-1 py-1.5 rounded-lg transition flex items-center justify-center gap-1">
+            <i class="fa-solid fa-book-bookmark"></i> โน้ต ({{ (selectedCourse.notes || []).length }})
+          </button>
+          <button @click="courseModalTab = 'tasks'" :class="courseModalTab === 'tasks' ? 'bg-white dark:bg-slate-900 text-indigo-600 dark:text-indigo-400 shadow-xs' : 'text-slate-500'" class="flex-1 py-1.5 rounded-lg transition flex items-center justify-center gap-1">
+            <i class="fa-solid fa-list-check"></i> งาน ({{ getCourseTasksCount(selectedCourse.id) }})
+          </button>
+          <button @click="courseModalTab = 'exams'" :class="courseModalTab === 'exams' ? 'bg-white dark:bg-slate-900 text-indigo-600 dark:text-indigo-400 shadow-xs' : 'text-slate-500'" class="flex-1 py-1.5 rounded-lg transition flex items-center justify-center gap-1">
+            <i class="fa-solid fa-file-pen"></i> สอบ ({{ getCourseExamsCount(selectedCourse.id) }})
+          </button>
+          <button @click="courseModalTab = 'info'" :class="courseModalTab === 'info' ? 'bg-white dark:bg-slate-900 text-indigo-600 dark:text-indigo-400 shadow-xs' : 'text-slate-500'" class="flex-1 py-1.5 rounded-lg transition flex items-center justify-center gap-1">
+            <i class="fa-solid fa-circle-info"></i> ข้อมูล
+          </button>
+        </div>
+
+        <!-- TAB 1 CONTENT: NOTES & 🤖 AI SUMMARIZER -->
+        <div v-if="courseModalTab === 'notes'" class="space-y-3 overflow-y-auto flex-1 pr-1">
+          <!-- Add Note Form -->
+          <div class="p-3 bg-slate-50 dark:bg-slate-800/60 rounded-2xl border border-app-border dark:border-app-darkBorder space-y-2">
+            <div class="flex items-center justify-between">
+              <span class="text-xs font-bold text-slate-700 dark:text-slate-200">➕ จดบันทึก / โน้ตใหม่</span>
+              <button v-if="newCourseNote.content.length > 10" @click="summarizeNoteWithAI(newCourseNote)" :disabled="isSummarizingNote" class="text-[11px] px-2 py-0.5 rounded-lg bg-indigo-600 text-white font-bold flex items-center gap-1 hover:bg-indigo-700 disabled:opacity-50 transition shadow-xs">
+                <i class="fa-solid" :class="isSummarizingNote ? 'fa-spinner animate-spin' : 'fa-wand-magic-sparkles'"></i>
+                <span>{{ isSummarizingNote ? 'กำลังสรุป...' : '🤖 AI สรุป Notes' }}</span>
+              </button>
+            </div>
+            <input v-model="newCourseNote.title" placeholder="หัวข้อโน้ต เช่น Limits, Derivatives, Chapter 1..." class="w-full bg-white dark:bg-slate-900 border p-2 rounded-xl text-xs outline-none">
+            <textarea v-model="newCourseNote.content" rows="3" placeholder="เนื้อหาสำคัญ สูตร คำจำกัดความ หรือประเด็นที่อาจารย์เน้น..." class="w-full bg-white dark:bg-slate-900 border p-2 rounded-xl text-xs outline-none resize-none"></textarea>
+            
+            <div class="flex justify-end">
+              <button @click="addNoteToSelectedCourse" :disabled="!newCourseNote.title || !newCourseNote.content" class="px-3 py-1.5 bg-slate-900 dark:bg-white text-white dark:text-slate-900 text-xs font-bold rounded-xl disabled:opacity-50 transition">
+                + บันทึกโน้ต
+              </button>
+            </div>
+          </div>
+
+          <!-- AI Summary Result Banner (if generated) -->
+          <div v-if="aiNoteSummaryResult" class="p-3.5 bg-indigo-50 dark:bg-indigo-950/60 rounded-2xl border border-indigo-200 dark:border-indigo-800/80 space-y-2 text-xs">
+            <div class="flex justify-between items-center text-indigo-900 dark:text-indigo-200 font-bold">
+              <span class="flex items-center gap-1.5">
+                <i class="fa-solid fa-wand-magic-sparkles text-indigo-500"></i> ผลสรุปจาก AI Tutor:
+                <span v-if="aiNoteSummaryResult.modelUsed" class="text-[9px] px-1.5 py-0.5 rounded-full bg-indigo-200/70 dark:bg-indigo-900/70 text-indigo-800 dark:text-indigo-300 font-mono font-normal">
+                  {{ aiNoteSummaryResult.modelUsed }}
+                </span>
+              </span>
+              <button @click="aiNoteSummaryResult = null" class="text-slate-400 hover:text-slate-600"><i class="fa-solid fa-xmark"></i></button>
+            </div>
+            <p class="text-slate-700 dark:text-slate-300 leading-relaxed font-medium">{{ aiNoteSummaryResult.summary }}</p>
+            <div v-if="aiNoteSummaryResult.keyPoints?.length" class="space-y-1 pt-1 border-t border-indigo-200 dark:border-indigo-800">
+              <span class="font-bold text-indigo-900 dark:text-indigo-300">📌 ประเด็นสำคัญ:</span>
+              <ul class="list-disc pl-4 space-y-0.5 text-[11px] text-slate-600 dark:text-slate-300">
+                <li v-for="(point, idx) in aiNoteSummaryResult.keyPoints" :key="idx">{{ point }}</li>
+              </ul>
+            </div>
+            <div v-if="aiNoteSummaryResult.examTips" class="p-2 bg-amber-100/70 dark:bg-amber-950/50 rounded-xl border border-amber-300 dark:border-amber-800 text-[11px] text-amber-900 dark:text-amber-200">
+              💡 <strong>จุดที่มักออกสอบ:</strong> {{ aiNoteSummaryResult.examTips }}
+            </div>
+          </div>
+
+          <!-- Existing Notes List -->
+          <div class="space-y-2">
+            <h4 class="font-bold text-xs text-slate-700 dark:text-slate-300">📚 รายการโน้ตทั้งหมด ({{ (selectedCourse.notes || []).length }})</h4>
+            <div v-for="(note, idx) in (selectedCourse.notes || [])" :key="note.id || idx" class="p-3 bg-slate-50 dark:bg-slate-800/60 rounded-xl border border-app-border dark:border-app-darkBorder space-y-1.5">
+              <div class="flex justify-between items-center">
+                <h5 class="font-bold text-xs text-slate-800 dark:text-slate-100">{{ note.title }}</h5>
+                <div class="flex items-center gap-1.5">
+                  <button @click="summarizeNoteWithAI(note)" class="text-[10px] text-indigo-600 dark:text-indigo-400 hover:underline font-semibold flex items-center gap-1">
+                    <i class="fa-solid fa-wand-magic-sparkles"></i> AI สรุป
+                  </button>
+                  <button @click="deleteNoteFromSelectedCourse(idx)" class="text-slate-400 hover:text-rose-600 text-xs p-0.5">
+                    <i class="fa-solid fa-trash-can"></i>
+                  </button>
+                </div>
+              </div>
+              <p class="text-xs text-slate-600 dark:text-slate-300 whitespace-pre-wrap leading-relaxed">{{ note.content }}</p>
+            </div>
+            <p v-if="!(selectedCourse.notes || []).length" class="text-slate-400 text-xs text-center py-4 italic">ยังไม่มีบันทึกโน้ตในวิชานี้</p>
           </div>
         </div>
 
-        <div class="flex gap-2 pt-1">
+        <!-- TAB 2 CONTENT: TASKS LINKED TO COURSE -->
+        <div v-else-if="courseModalTab === 'tasks'" class="space-y-2 overflow-y-auto flex-1 pr-1 text-xs">
+          <div v-for="t in tasks.filter(t => t.courseId === selectedCourse.id)" :key="t.id" class="p-2.5 bg-slate-50 dark:bg-slate-800/60 rounded-xl border flex justify-between items-center">
+            <div class="flex items-center gap-2">
+              <input type="checkbox" :checked="t.progress === 100" @change="toggleTaskComplete(t)" class="accent-emerald-600">
+              <span :class="{'line-through text-slate-400': t.progress === 100}" class="font-bold">{{ t.title }}</span>
+            </div>
+            <span class="text-[10px] text-slate-400 font-mono">{{ t.deadline }}</span>
+          </div>
+          <p v-if="tasks.filter(t => t.courseId === selectedCourse.id).length === 0" class="text-slate-400 text-center py-6">ไม่มีงานค้างในวิชานี้</p>
+        </div>
+
+        <!-- TAB 3 CONTENT: EXAMS LINKED TO COURSE -->
+        <div v-else-if="courseModalTab === 'exams'" class="space-y-2 overflow-y-auto flex-1 pr-1 text-xs">
+          <div v-for="e in currentTermExams.filter(e => e.courseId === selectedCourse.id)" :key="e.id" class="p-3 bg-rose-50/60 dark:bg-rose-950/20 border border-rose-200 dark:border-rose-900 rounded-xl space-y-1">
+            <div class="flex justify-between items-center font-bold">
+              <span>{{ e.title }}</span>
+              <span class="text-[10px] text-rose-600 font-mono">{{ new Date(e.date).toLocaleDateString('th-TH') }}</span>
+            </div>
+            <p class="text-[11px] text-slate-400">ห้องสอบ: {{ e.room || '-' }}</p>
+          </div>
+          <p v-if="currentTermExams.filter(e => e.courseId === selectedCourse.id).length === 0" class="text-slate-400 text-center py-6">ไม่มีกำหนดการสอบในวิชานี้</p>
+        </div>
+
+        <!-- TAB 4 CONTENT: GENERAL INFO -->
+        <div v-else class="space-y-2 text-xs text-slate-600 dark:text-slate-300 overflow-y-auto flex-1 pr-1">
+          <p>👨‍🏫 <strong>อาจารย์ผู้สอน:</strong> {{ selectedCourse.instructor || '-' }}</p>
+          <p>📍 <strong>ห้องเรียน:</strong> {{ selectedCourse.schedule?.room || '-' }}</p>
+          <p>⏰ <strong>เวลาเรียน:</strong> วัน{{ selectedCourse.schedule?.day }} {{ selectedCourse.schedule?.start }}-{{ selectedCourse.schedule?.end }}</p>
+          <p>💎 <strong>หน่วยกิต:</strong> {{ selectedCourse.credit }} หน่วยกิต</p>
+          <p>🔖 <strong>ที่มาข้อมูล:</strong> {{ selectedCourse.source === 'ai' ? 'AI Scan (สแกนอัตโนมัติ)' : 'บันทึกด้วยตนเอง' }}</p>
+        </div>
+
+        <!-- FOOTER BUTTONS -->
+        <div class="flex gap-2 pt-2 border-t dark:border-slate-800 shrink-0">
           <button @click="deleteCourse(selectedCourse.id)" class="px-3 py-2 bg-rose-50 hover:bg-rose-100 dark:bg-rose-950/40 text-rose-600 dark:text-rose-400 font-bold rounded-xl text-xs flex items-center gap-1 transition">
             <i class="fa-solid fa-trash-can"></i> ลบวิชานี้
           </button>
@@ -643,34 +1529,113 @@
         const activeTab = ref('today');
         const isDarkMode = ref(false);
         const user = ref(null);
+        const scheduleViewMode = ref('week'); // 'week' | 'month' | 'list'
+        const selectedCalendarDay = ref(null);
+        const selectedTaskFilter = ref('all'); // 'all' | 'today' | 'week' | 'overdue' | 'completed'
+        const courseModalTab = ref('notes'); // 'notes' | 'tasks' | 'exams' | 'info'
+        const newCourseNote = ref({ title: '', content: '' });
+        const isSummarizingNote = ref(false);
+        const aiNoteSummaryResult = ref(null);
         
-        // STREAK & REAL DATA INITIALIZATION WITH PERSISTENCE
+        // 4-YEAR MULTI-SEMESTER DATA STRUCTURE WITH DEFAULT COURSES
         const defaultSemesterData = {
-          '1/2569': { courses: [], tasks: [], exams: [] },
-          '2/2569': { courses: [], tasks: [], exams: [] }
+          '1/2567': { courses: [], tasks: [], exams: [] },
+          '2/2567': { courses: [], tasks: [], exams: [] },
+          '1/2568': { courses: [], tasks: [], exams: [] },
+          '2/2568': { courses: [], tasks: [], exams: [] },
+          '1/2569': {
+            courses: [
+              {
+                id: 'c_mth101',
+                code: 'MTH101',
+                name: 'Calculus I (แคลคูลัส 1)',
+                instructor: 'ผศ.ดร. ธนากร วิทยากร',
+                credit: 3,
+                schedule: { day: 'MON', start: '08:30', end: '10:30', room: 'ST301' },
+                source: 'manual',
+                notes: [
+                  { id: 'n1', title: 'Limits & Continuity', content: 'ลิมิตหาค่าได้เมื่อลิมิตซ้ายเท่ากับลิมิตขวา lim x->a f(x) = L\nสูตรสำคัญ: lim x->0 (sin x)/x = 1' },
+                  { id: 'n2', title: 'Derivatives & Chain Rule', content: 'กฎลูกโซ่: d/dx [f(g(x))] = f\'(g(x)) * g\'(x)\nสูตรพื้นฐาน d/dx(x^n) = n*x^(n-1)' }
+                ]
+              },
+              {
+                id: 'c_edu102',
+                code: 'EDU102',
+                name: 'Educational Psychology (จิตวิทยาการศึกษา)',
+                instructor: 'อ. นภา รักษ์วิชา',
+                credit: 3,
+                schedule: { day: 'MON', start: '13:00', end: '15:00', room: 'ED204' },
+                source: 'manual',
+                notes: [
+                  { id: 'n3', title: 'ทฤษฎีการเรียนรู้ Piaget & Vygotsky', content: 'Piaget เน้นพัฒนาการตามวัย 4 ขั้น\nVygotsky เน้น Zone of Proximal Development (ZPD) และ Scaffolding ทางสังคม' }
+                ]
+              },
+              {
+                id: 'c_eng101',
+                code: 'ENG101',
+                name: 'English for Communication',
+                instructor: 'Aj. Sarah Jenkins',
+                credit: 3,
+                schedule: { day: 'WED', start: '10:30', end: '12:30', room: 'LC502' },
+                source: 'manual',
+                notes: []
+              }
+            ],
+            tasks: [
+              { id: 't1', title: 'Assignment — สรุปบทความวิชาชีพครู', courseId: 'c_edu102', deadline: new Date(Date.now() + 86400000).toISOString().split('T')[0], priority: 'HIGH', progress: 60, completed: false },
+              { id: 't2', title: 'Calculus Problem Set 4 (Chain Rule)', courseId: 'c_mth101', deadline: new Date(Date.now() + 86400000 * 3).toISOString().split('T')[0], priority: 'MEDIUM', progress: 20, completed: false },
+              { id: 't3', title: 'English Slide Presentation (10 Mins)', courseId: 'c_eng101', deadline: new Date(Date.now() + 86400000 * 12).toISOString().split('T')[0], priority: 'HIGH', progress: 0, completed: false }
+            ],
+            exams: [
+              { id: 'e1', courseId: 'c_mth101', title: 'Midterm Exam — Calculus I', date: new Date(Date.now() + 86400000 * 7 + 3600000 * 2).toISOString().slice(0, 16), room: 'อาคารเรียนรวม 3 (LH3-201)' },
+              { id: 'e2', courseId: 'c_edu102', title: 'Final Exam — Educational Psychology', date: new Date(Date.now() + 86400000 * 25).toISOString().slice(0, 16), room: 'ED204' }
+            ]
+          },
+          '2/2569': { courses: [], tasks: [], exams: [] },
+          '1/2570': { courses: [], tasks: [], exams: [] },
+          '2/2570': { courses: [], tasks: [], exams: [] }
         };
+
         let initialData = defaultSemesterData;
         try {
           const cached = localStorage.getItem('study_os_data');
-          if (cached) initialData = JSON.parse(cached);
+          if (cached) {
+            const parsed = JSON.parse(cached);
+            initialData = { ...defaultSemesterData, ...parsed };
+          }
         } catch (e) {}
 
-        let initialStreak = 0;
-        let initialGPAX = { currentGPAX: 0.00, pastCredits: 0, targetGPAX: 3.50 };
-        let initialFocus = 0;
+        let initialStreak = 1;
+        let initialLastCheckInDate = null;
+        let initialGPAX = { currentGPAX: 3.52, pastCredits: 64, targetGPAX: 3.65 };
+        let initialFocus = 2;
+        let initialAcademicYears = [
+          { yearNumber: 1, label: 'Year 1 (ปี 1)', academicYearBE: '2567', sem1GPA: 3.42, sem2GPA: 3.51 },
+          { yearNumber: 2, label: 'Year 2 (ปี 2)', academicYearBE: '2568', sem1GPA: 3.63, sem2GPA: 3.55 },
+          { yearNumber: 3, label: 'Year 3 (ปี 3)', academicYearBE: '2569', sem1GPA: null, sem2GPA: null },
+          { yearNumber: 4, label: 'Year 4 (ปี 4)', academicYearBE: '2570', sem1GPA: null, sem2GPA: null }
+        ];
+        let initialTotalDegreeCredits = 120;
+
         try {
           const cachedMeta = localStorage.getItem('study_os_meta');
           if (cachedMeta) {
             const meta = JSON.parse(cachedMeta);
             if (meta.streakCount !== undefined) initialStreak = meta.streakCount;
+            if (meta.lastCheckInDate !== undefined) initialLastCheckInDate = meta.lastCheckInDate;
             if (meta.gpaxInput !== undefined) initialGPAX = meta.gpaxInput;
             if (meta.focusSessionsCompleted !== undefined) initialFocus = meta.focusSessionsCompleted;
+            if (meta.academicYears !== undefined) initialAcademicYears = meta.academicYears;
+            if (meta.totalDegreeCreditsRequired !== undefined) initialTotalDegreeCredits = meta.totalDegreeCreditsRequired;
           }
         } catch (e) {}
 
         const streakCount = ref(initialStreak);
+        const lastCheckInDate = ref(initialLastCheckInDate);
         const gpaxInput = ref(initialGPAX);
         const focusSessionsCompleted = ref(initialFocus);
+        const academicYears = ref(initialAcademicYears);
+        const totalDegreeCreditsRequired = ref(initialTotalDegreeCredits);
         const selectedSemester = ref('1/2569');
         const showFabMenu = ref(false);
         const showQuickAddMenu = ref(false);
@@ -682,13 +1647,44 @@
         const selectedCourse = ref(null);
         const autoNotifications = ref([]);
 
+        // SCANNER TYPE SELECTION & REVIEW STATE
+        const selectedScanType = ref('CLASS_SCHEDULE'); // 'CLASS_SCHEDULE' | 'EXAM_SCHEDULE' | 'AUTO'
+        const selectedGeminiModel = ref('auto');
+        const lastScannedModel = ref('');
+        const scanReviewMode = ref(false);
+        const scannedCourses = ref([]);
+        const scannedExams = ref([]);
+
+        const scanTypeLabel = computed(() => {
+          if (selectedScanType.value === 'CLASS_SCHEDULE') return 'ตารางเรียน';
+          if (selectedScanType.value === 'EXAM_SCHEDULE') return 'ตารางสอบ';
+          return 'ตารางเรียน & ตารางสอบ';
+        });
+
+        const removeScannedCourse = (idx) => {
+          scannedCourses.value.splice(idx, 1);
+        };
+
+        const removeScannedExam = (idx) => {
+          scannedExams.value.splice(idx, 1);
+        };
+
         // FILE SCANNING STATE
         const selectedScanFile = ref(null);
         const previewImageUrl = ref(null);
         const fileInput = ref(null);
+        const scanErrorMessage = ref('');
+        const isRetrying = ref(false);
         
         // ABORT CONTROLLER FOR AI CANCELATION
         let scanAbortController = null;
+
+        // DATE HELPER & ONCE-PER-DAY CHECK-IN
+        const getTodayDateStr = () => {
+          const d = new Date();
+          return `${d.getFullYear()}-${String(d.getMonth() + 1).padStart(2, '0')}-${String(d.getDate()).padStart(2, '0')}`;
+        };
+        const isCheckedInToday = computed(() => lastCheckInDate.value === getTodayDateStr());
 
         // TREE GROWTH SYSTEM LOGIC
         const treeStage = computed(() => {
@@ -700,8 +1696,15 @@
           return { level: 1, emoji: 'เมล็ดพันธุ์', emoji: '🌰' };
         });
 
+        // RESTRICT CHECK-IN TO ONCE PER DAY
         const incrementStreak = () => {
+          const today = getTodayDateStr();
+          if (isCheckedInToday.value) {
+            alert(`🎉 วันนี้คุณได้เช็คอินไปแล้วเรียบร้อย! (Streak ปัจจุบัน: ${streakCount.value} วัน)\n\nระบบกำหนดให้เช็คอินได้วันละ 1 ครั้งเท่านั้นเพื่อสร้างวินัยความต่อเนื่อง พรุ่งนี้กลับมาเช็คอินสะสม Streak ต่อนะครับ!`);
+            return;
+          }
           streakCount.value++;
+          lastCheckInDate.value = today;
           if (streakCount.value % 5 === 0) {
             confetti({ particleCount: 100, spread: 70, origin: { y: 0.6 } });
           } else {
@@ -783,20 +1786,29 @@
 
         const semesterData = ref(initialData);
 
-        // REAL-TIME AUTO SAVE ENGINE WITH CLOUD ICON STATUS
+        // 30-SECOND BATCH AUTO-SAVE ENGINE WITH COUNTDOWN & CLOUD STATUS
         const saveStatus = ref('saved'); // 'saved' | 'saving' | 'error'
+        const hasPendingChanges = ref(false);
+        const secondsUntilNextSave = ref(30);
         const lastSavedTime = ref(new Date().toLocaleTimeString('th-TH', { hour: '2-digit', minute: '2-digit' }));
-        let saveDebounceTimer = null;
+        let saveCountdownTimer = null;
         let isInitialSyncing = true;
 
         const executeSave = async () => {
+          if (saveCountdownTimer) {
+            clearInterval(saveCountdownTimer);
+            saveCountdownTimer = null;
+          }
           saveStatus.value = 'saving';
           try {
             const payload = {
               semesterData: semesterData.value,
               streakCount: streakCount.value,
+              lastCheckInDate: lastCheckInDate.value,
               gpaxInput: gpaxInput.value,
               focusSessionsCompleted: focusSessionsCompleted.value,
+              academicYears: academicYears.value,
+              totalDegreeCreditsRequired: totalDegreeCreditsRequired.value,
               updatedAt: new Date().toISOString()
             };
 
@@ -804,50 +1816,88 @@
             localStorage.setItem('study_os_data', JSON.stringify(payload.semesterData));
             localStorage.setItem('study_os_meta', JSON.stringify({
               streakCount: payload.streakCount,
+              lastCheckInDate: payload.lastCheckInDate,
               gpaxInput: payload.gpaxInput,
-              focusSessionsCompleted: payload.focusSessionsCompleted
+              focusSessionsCompleted: payload.focusSessionsCompleted,
+              academicYears: payload.academicYears,
+              totalDegreeCreditsRequired: payload.totalDegreeCreditsRequired
             }));
 
-            // 2. Cloud Firestore real-time sync (if user is authenticated)
+            // 2. Cloud Firestore batch sync (if user is authenticated)
             if (user.value && user.value.uid) {
               await setDoc(doc(db, "users", user.value.uid), payload, { merge: true });
             }
 
-            // Smooth UI feedback so user clearly perceives the cloud save transition
+            hasPendingChanges.value = false;
+            secondsUntilNextSave.value = 30;
+
             setTimeout(() => {
               saveStatus.value = 'saved';
               lastSavedTime.value = new Date().toLocaleTimeString('th-TH', { hour: '2-digit', minute: '2-digit' });
-            }, 200);
+            }, 300);
           } catch (err) {
-            console.error("Realtime save error:", err);
+            console.error("Auto save error:", err);
             saveStatus.value = 'error';
           }
         };
 
-        const triggerRealtimeSave = () => {
+        // Batch changes into 30-second auto-save cycles
+        const triggerAutoSave30s = () => {
           if (isInitialSyncing) return;
-          saveStatus.value = 'saving';
-          if (saveDebounceTimer) clearTimeout(saveDebounceTimer);
-          saveDebounceTimer = setTimeout(executeSave, 400);
+          hasPendingChanges.value = true;
+
+          // Always backup to localStorage immediately so sudden tab close / refresh never loses typed data
+          try {
+            localStorage.setItem('study_os_data', JSON.stringify(semesterData.value));
+            localStorage.setItem('study_os_meta', JSON.stringify({
+              streakCount: streakCount.value,
+              lastCheckInDate: lastCheckInDate.value,
+              gpaxInput: gpaxInput.value,
+              focusSessionsCompleted: focusSessionsCompleted.value,
+              academicYears: academicYears.value,
+              totalDegreeCreditsRequired: totalDegreeCreditsRequired.value
+            }));
+          } catch (e) {}
+
+          // Start 30-second countdown if not already running
+          if (!saveCountdownTimer) {
+            secondsUntilNextSave.value = 30;
+            saveCountdownTimer = setInterval(() => {
+              secondsUntilNextSave.value--;
+              if (secondsUntilNextSave.value <= 0) {
+                clearInterval(saveCountdownTimer);
+                saveCountdownTimer = null;
+                if (hasPendingChanges.value) {
+                  executeSave();
+                }
+              }
+            }, 1000);
+          }
         };
 
         const forceSave = () => {
-          if (saveDebounceTimer) clearTimeout(saveDebounceTimer);
+          if (saveCountdownTimer) {
+            clearInterval(saveCountdownTimer);
+            saveCountdownTimer = null;
+          }
           executeSave();
         };
 
         const saveStatusTitle = computed(() => {
-          if (saveStatus.value === 'saving') return 'กำลังบันทึกข้อมูลแบบเรียลไทม์...';
+          if (saveStatus.value === 'saving') return 'กำลังบันทึกข้อมูล...';
+          if (hasPendingChanges.value) {
+            return `มีการแก้ไขใหม่! ระบบจะบันทึกอัตโนมัติในอีก ${secondsUntilNextSave.value} วินาที (หรือคลิกเพื่อบันทึกทันที)`;
+          }
           if (saveStatus.value === 'saved') {
             const dest = user.value ? 'Cloud Firestore & Local Storage' : 'Local Storage (เข้าสู่ระบบ Google เพื่อซิงก์ Cloud)';
-            return `บันทึกข้อมูลเรียบร้อยแล้ว (${lastSavedTime.value}) ไปยัง ${dest} • คลิกเพื่อบันทึกซ้ำทันที`;
+            return `บันทึกข้อมูลเรียบร้อยแล้ว (${lastSavedTime.value}) รอบบันทึกทุก 30 วินาที • คลิกเพื่อบันทึกทันที`;
           }
           return 'บันทึกข้อมูลไม่สำเร็จ • คลิกเพื่อลองบันทึกใหม่';
         });
 
-        // Watch for ANY real-time changes to courses, tasks, exams, streak, GPAX, focus logs
-        watch([semesterData, streakCount, gpaxInput, focusSessionsCompleted], () => {
-          triggerRealtimeSave();
+        // Watch for ANY changes to trigger the 30-second auto-save batch cycle
+        watch([semesterData, streakCount, lastCheckInDate, gpaxInput, focusSessionsCompleted, academicYears, totalDegreeCreditsRequired], () => {
+          triggerAutoSave30s();
         }, { deep: true });
 
         const currentTermCourses = computed(() => semesterData.value[selectedSemester.value]?.courses || []);
@@ -855,15 +1905,401 @@
         const currentTermExams = computed(() => semesterData.value[selectedSemester.value]?.exams || []);
 
         const newCourse = ref({ code: '', name: '', instructor: '', credit: 3, schedule: { day: 'MON', start: '09:00', end: '12:00', room: '' } });
-        const newExam = ref({ courseId: '', title: '', date: '', room: '' });
+        const newExam = ref({ courseId: '', title: '', date: new Date().toISOString().slice(0, 16), room: '' });
         const newTask = ref({ title: '', courseId: '', deadline: new Date().toISOString().split('T')[0], priority: 'HIGH' });
 
         // TODAY SCHEDULE COMPUTED
         const currentDayName = computed(() => new Date().toLocaleDateString('en-US', { weekday: 'short' }).toUpperCase());
+        const todayFormattedShort = computed(() => new Date().toLocaleDateString('en-GB', { day: 'numeric', month: 'short' }).toUpperCase());
+        
+        const greetingMessage = computed(() => {
+          const h = new Date().getHours();
+          if (h < 12) return 'Good morning';
+          if (h < 18) return 'Good afternoon';
+          return 'Good evening';
+        });
+
         const todayScheduleList = computed(() => {
           return currentTermCourses.value
-            .filter(c => c.schedule.day === currentDayName.value)
-            .sort((a, b) => a.schedule.start.localeCompare(b.schedule.start));
+            .filter(c => c.schedule?.day === currentDayName.value)
+            .sort((a, b) => (a.schedule?.start || '').localeCompare(b.schedule?.start || ''));
+        });
+
+        const nextClassStatusMessage = computed(() => {
+          if (todayScheduleList.value.length === 0) return 'ไม่มีคาบเรียนวันนี้ 🎉';
+          const now = new Date();
+          const currentMins = now.getHours() * 60 + now.getMinutes();
+          for (const c of todayScheduleList.value) {
+            if (!c.schedule?.start || !c.schedule?.end) continue;
+            const [sH, sM] = c.schedule.start.split(':').map(Number);
+            const [eH, eM] = c.schedule.end.split(':').map(Number);
+            const startMins = sH * 60 + sM;
+            const endMins = eH * 60 + eM;
+            if (currentMins >= startMins && currentMins < endMins) {
+              return `กำลังเรียน: ${c.name} (${c.schedule.room || '-'})`;
+            }
+            if (currentMins < startMins) {
+              const diff = startMins - currentMins;
+              return `Next class in ${diff} minutes (${c.code})`;
+            }
+          }
+          return 'คาบเรียนวันนี้เสร็จสิ้นแล้ว 🎉';
+        });
+
+        const upcomingItems = computed(() => {
+          const list = [];
+          const now = new Date();
+          tasks.value.forEach(t => {
+            if (!t.completed && (t.progress || 0) < 100) {
+              const diff = Math.ceil((new Date(t.deadline) - now) / (1000 * 60 * 60 * 24));
+              if (diff >= -1 && diff <= 14) {
+                list.push({
+                  id: 'up_t_' + t.id,
+                  type: 'task',
+                  title: t.title,
+                  subtitle: 'Assignment',
+                  courseCode: getCourseCode(t.courseId),
+                  dueDays: diff,
+                  dueLabel: diff === 0 ? 'Due today' : (diff === 1 ? 'Due tomorrow' : (diff < 0 ? 'Overdue' : `${diff} days left`)),
+                  badgeColor: diff <= 1 ? 'text-rose-500 font-bold' : 'text-amber-500 font-bold',
+                  icon: 'fa-solid fa-thumbtack'
+                });
+              }
+            }
+          });
+          currentTermExams.value.forEach(e => {
+            const diff = Math.ceil((new Date(e.date) - now) / (1000 * 60 * 60 * 24));
+            if (diff >= 0 && diff <= 21) {
+              list.push({
+                id: 'up_e_' + e.id,
+                type: 'exam',
+                title: e.title,
+                subtitle: 'Exam',
+                courseCode: getCourseCode(e.courseId),
+                dueDays: diff,
+                dueLabel: diff === 0 ? 'Exam today!' : `${diff} days left`,
+                badgeColor: diff <= 3 ? 'text-rose-500 font-bold' : 'text-amber-500 font-bold',
+                icon: 'fa-solid fa-flask'
+              });
+            }
+          });
+          return list.sort((a, b) => a.dueDays - b.dueDays);
+        });
+
+        // SCHEDULE 3 VIEWS HELPERS & DATA
+        const activeWeekDays = [
+          { key: 'MON', shortLabel: 'จันทร์' },
+          { key: 'TUE', shortLabel: 'อังคาร' },
+          { key: 'WED', shortLabel: 'พุธ' },
+          { key: 'THU', shortLabel: 'พฤหัส' },
+          { key: 'FRI', shortLabel: 'ศุกร์' }
+        ];
+
+        const timeSlots = ['08:30', '10:30', '13:00', '15:00', '17:00'];
+
+        const getCoursesForSlotAndDay = (dayKey, slot) => {
+          return currentTermCourses.value.filter(c => {
+            if (c.schedule?.day !== dayKey) return false;
+            const start = c.schedule?.start || '';
+            const slotHour = parseInt(slot.split(':')[0], 10);
+            const startHour = parseInt(start.split(':')[0], 10);
+            return Math.abs(startHour - slotHour) <= 1;
+          });
+        };
+
+        const currentMonthYearDisplay = computed(() => {
+          return new Date().toLocaleDateString('th-TH', { month: 'long', year: 'numeric' }).toUpperCase();
+        });
+
+        const monthCalendarDays = computed(() => {
+          const now = new Date();
+          const year = now.getFullYear();
+          const month = now.getMonth();
+          const firstDayIndex = new Date(year, month, 1).getDay();
+          const lastDate = new Date(year, month + 1, 0).getDate();
+          const prevLastDate = new Date(year, month, 0).getDate();
+          const days = [];
+
+          // Previous month filler
+          for (let i = firstDayIndex - 1; i >= 0; i--) {
+            const d = prevLastDate - i;
+            days.push({ dayNumber: d, dateStr: '', isToday: false, isCurrentMonth: false, classCount: 0, taskCount: 0, hasExam: false });
+          }
+
+          // Current month days
+          for (let i = 1; i <= lastDate; i++) {
+            const dateStr = `${year}-${String(month + 1).padStart(2, '0')}-${String(i).padStart(2, '0')}`;
+            const isToday = i === now.getDate();
+            const dayOfWeek = new Date(year, month, i).toLocaleDateString('en-US', { weekday: 'short' }).toUpperCase();
+            const classCount = currentTermCourses.value.filter(c => c.schedule?.day === dayOfWeek).length;
+            const taskCount = tasks.value.filter(t => t.deadline === dateStr).length;
+            const hasExam = currentTermExams.value.some(e => (e.date || '').startsWith(dateStr));
+
+            days.push({ dayNumber: i, dateStr, isToday, isCurrentMonth: true, classCount, taskCount, hasExam });
+          }
+
+          // Next month filler
+          const remaining = 35 - days.length;
+          for (let i = 1; i <= remaining; i++) {
+            days.push({ dayNumber: i, dateStr: '', isToday: false, isCurrentMonth: false, classCount: 0, taskCount: 0, hasExam: false });
+          }
+
+          return days;
+        });
+
+        const getEventsForDate = (dateStr) => {
+          if (!dateStr) return [];
+          const list = [];
+          const dObj = new Date(dateStr);
+          const dayOfWeek = dObj.toLocaleDateString('en-US', { weekday: 'short' }).toUpperCase();
+          
+          currentTermCourses.value.filter(c => c.schedule?.day === dayOfWeek).forEach(c => {
+            list.push({
+              id: 'c_' + c.id,
+              badgeClass: 'bg-blue-100 text-blue-800 dark:bg-blue-900/60 dark:text-blue-300',
+              typeLabel: 'เรียน',
+              title: `${c.code} ${c.name}`,
+              timeInfo: `${c.schedule?.start}-${c.schedule?.end} (ห้อง ${c.schedule?.room || '-'})`
+            });
+          });
+
+          tasks.value.filter(t => t.deadline === dateStr).forEach(t => {
+            list.push({
+              id: 't_' + t.id,
+              badgeClass: 'bg-amber-100 text-amber-800 dark:bg-amber-950 dark:text-amber-300',
+              typeLabel: 'ส่งงาน',
+              title: t.title,
+              timeInfo: `Due: ${getCourseCode(t.courseId)}`
+            });
+          });
+
+          currentTermExams.value.filter(e => (e.date || '').startsWith(dateStr)).forEach(e => {
+            list.push({
+              id: 'e_' + e.id,
+              badgeClass: 'bg-rose-100 text-rose-800 dark:bg-rose-950 dark:text-rose-300',
+              typeLabel: 'สอบ',
+              title: e.title,
+              timeInfo: `ห้อง ${e.room || '-'}`
+            });
+          });
+
+          return list;
+        };
+
+        const scheduleListFeed = computed(() => {
+          return weekDays.map(d => ({
+            dayKey: d.key,
+            dayLabel: d.label.split(' ')[0],
+            colorClass: d.colorClass,
+            courses: currentTermCourses.value.filter(c => c.schedule?.day === d.key)
+          }));
+        });
+
+        // TASK MANAGER FILTERS & STATUSES
+        const taskFilters = [
+          { id: 'all', label: 'All', icon: 'fa-solid fa-list' },
+          { id: 'today', label: 'Today', icon: 'fa-solid fa-calendar-day' },
+          { id: 'week', label: 'This week', icon: 'fa-regular fa-calendar' },
+          { id: 'overdue', label: 'Overdue', icon: 'fa-solid fa-triangle-exclamation' },
+          { id: 'completed', label: 'Completed', icon: 'fa-solid fa-circle-check' }
+        ];
+
+        const filteredTasks = computed(() => {
+          const list = [...tasks.value];
+          const today = getTodayDateStr();
+          const now = new Date();
+          const filter = selectedTaskFilter.value;
+
+          if (filter === 'today') {
+            return list.filter(t => t.deadline === today);
+          }
+          if (filter === 'week') {
+            return list.filter(t => {
+              const diff = Math.ceil((new Date(t.deadline) - now) / (1000 * 60 * 60 * 24));
+              return diff >= 0 && diff <= 7;
+            });
+          }
+          if (filter === 'overdue') {
+            return list.filter(t => (t.progress || 0) < 100 && new Date(t.deadline) < new Date(today));
+          }
+          if (filter === 'completed') {
+            return list.filter(t => (t.progress || 0) === 100 || t.completed);
+          }
+          return list.sort((a, b) => new Date(a.deadline) - new Date(b.deadline));
+        });
+
+        const getTaskCountByFilter = (filterId) => {
+          const today = getTodayDateStr();
+          const now = new Date();
+          if (filterId === 'all') return tasks.value.length;
+          if (filterId === 'today') return tasks.value.filter(t => t.deadline === today).length;
+          if (filterId === 'week') return tasks.value.filter(t => {
+            const diff = Math.ceil((new Date(t.deadline) - now) / (1000 * 60 * 60 * 24));
+            return diff >= 0 && diff <= 7;
+          }).length;
+          if (filterId === 'overdue') return tasks.value.filter(t => (t.progress || 0) < 100 && new Date(t.deadline) < new Date(today)).length;
+          if (filterId === 'completed') return tasks.value.filter(t => (t.progress || 0) === 100 || t.completed).length;
+          return 0;
+        };
+
+        const toggleTaskComplete = (task) => {
+          if (task.progress === 100) {
+            task.progress = 0;
+            task.completed = false;
+          } else {
+            task.progress = 100;
+            task.completed = true;
+            confetti({ particleCount: 40 });
+          }
+        };
+
+        const onTaskProgressChange = (task) => {
+          task.completed = (task.progress === 100);
+          if (task.progress === 100) confetti({ particleCount: 30 });
+        };
+
+        const getProgressBarVisual = (percent) => {
+          const safeP = Math.max(0, Math.min(100, percent || 0));
+          const filled = Math.round(safeP / 10);
+          const empty = 10 - filled;
+          return '█'.repeat(filled) + '░'.repeat(empty);
+        };
+
+        const getTaskStatusBadge = (task) => {
+          const today = getTodayDateStr();
+          const isOverdue = (task.progress || 0) < 100 && new Date(task.deadline) < new Date(today);
+          if (task.progress === 100 || task.completed) {
+            return { label: 'Completed', class: 'bg-emerald-100 text-emerald-800 dark:bg-emerald-950 dark:text-emerald-300', dotClass: 'bg-emerald-500' };
+          }
+          if (isOverdue) {
+            return { label: 'Overdue', class: 'bg-rose-100 text-rose-800 dark:bg-rose-950 dark:text-rose-300', dotClass: 'bg-rose-500' };
+          }
+          if ((task.progress || 0) > 0) {
+            return { label: 'In progress', class: 'bg-blue-100 text-blue-800 dark:bg-blue-950 dark:text-blue-300', dotClass: 'bg-blue-500' };
+          }
+          return { label: 'Not started', class: 'bg-slate-100 text-slate-700 dark:bg-slate-800 dark:text-slate-300', dotClass: 'bg-slate-400' };
+        };
+
+        const getDueCountdownLabel = (deadline) => {
+          if (!deadline) return '';
+          const today = getTodayDateStr();
+          const now = new Date();
+          const diff = Math.ceil((new Date(deadline) - now) / (1000 * 60 * 60 * 24));
+          if (diff === 0) return 'ส่งวันนี้ (Due Today)';
+          if (diff === 1) return 'ส่งพรุ่งนี้ (Due Tomorrow)';
+          if (diff < 0) return `เลยกำหนดส่ง ${Math.abs(diff)} วัน`;
+          return `เหลืออีก ${diff} วัน`;
+        };
+
+        const getDueCountdownClass = (deadline) => {
+          if (!deadline) return 'text-slate-400';
+          const now = new Date();
+          const diff = Math.ceil((new Date(deadline) - now) / (1000 * 60 * 60 * 24));
+          if (diff <= 1) return 'text-rose-500 font-bold';
+          if (diff <= 3) return 'text-amber-500 font-semibold';
+          return 'text-slate-400';
+        };
+
+        const getExamDaysLeftLabel = (dateStr) => {
+          if (!dateStr) return '';
+          const now = new Date();
+          const diff = Math.ceil((new Date(dateStr) - now) / (1000 * 60 * 60 * 24));
+          if (diff === 0) return '⏳ EXAM TODAY!';
+          if (diff < 0) return 'สอบผ่านไปแล้ว';
+          return `⏳ ${diff} DAYS LEFT`;
+        };
+
+        // COURSE ENTITY METRICS & NOTES MANAGER
+        const getCourseTasksCount = (cId) => tasks.value.filter(t => t.courseId === cId).length;
+        const getCourseExamsCount = (cId) => currentTermExams.value.filter(e => e.courseId === cId).length;
+
+        const addNoteToSelectedCourse = () => {
+          if (!selectedCourse.value || !newCourseNote.value.title) return;
+          if (!selectedCourse.value.notes) selectedCourse.value.notes = [];
+          selectedCourse.value.notes.push({
+            id: 'n_' + Date.now(),
+            title: newCourseNote.value.title,
+            content: newCourseNote.value.content
+          });
+          newCourseNote.value = { title: '', content: '' };
+        };
+
+        const deleteNoteFromSelectedCourse = (idx) => {
+          if (!selectedCourse.value || !selectedCourse.value.notes) return;
+          selectedCourse.value.notes.splice(idx, 1);
+        };
+
+        const summarizeNoteWithAI = async (note) => {
+          if (!note.content) return;
+          isSummarizingNote.value = true;
+          aiNoteSummaryResult.value = null;
+          try {
+            const response = await fetch('/api/summarize-notes', {
+              method: 'POST',
+              headers: { 'Content-Type': 'application/json' },
+              body: JSON.stringify({
+                courseName: selectedCourse.value?.name || '',
+                noteTitle: note.title,
+                noteContent: note.content,
+                preferredModel: selectedGeminiModel.value !== 'auto' ? selectedGeminiModel.value : ''
+              })
+            });
+            const responseText = await response.text();
+            let data = null;
+            try {
+              data = JSON.parse(responseText);
+            } catch (err) {
+              console.warn("Non-JSON note summary response:", responseText?.slice(0, 100));
+            }
+
+            if (!response.ok || !data) {
+              throw new Error(data?.error || 'ระบบ AI กำลังมีผู้ใช้งานหนาแน่น กรุณาลองใหม่อีกครั้ง');
+            }
+            aiNoteSummaryResult.value = data;
+            confetti({ particleCount: 35 });
+          } catch (e) {
+            console.error("AI Note Summary error:", e);
+            alert(`⚠️ สรุปโน้ตไม่สำเร็จ: ${e.message}`);
+          } finally {
+            isSummarizingNote.value = false;
+          }
+        };
+
+        // 4-YEAR ACADEMIC PROGRESSION & DEGREE CREDITS COMPUTED
+        const getYearAverageGPA = (year) => {
+          const g1 = Number(year.sem1GPA);
+          const g2 = Number(year.sem2GPA);
+          if (!isNaN(g1) && !isNaN(g2) && g1 > 0 && g2 > 0) return ((g1 + g2) / 2).toFixed(2);
+          if (!isNaN(g1) && g1 > 0) return g1.toFixed(2);
+          if (!isNaN(g2) && g2 > 0) return g2.toFixed(2);
+          return '—';
+        };
+
+        const overallCalculatedGPAX = computed(() => {
+          let sum = 0;
+          let count = 0;
+          academicYears.value.forEach(y => {
+            const g1 = Number(y.sem1GPA);
+            const g2 = Number(y.sem2GPA);
+            if (!isNaN(g1) && g1 > 0) { sum += g1; count++; }
+            if (!isNaN(g2) && g2 > 0) { sum += g2; count++; }
+          });
+          return count > 0 ? sum / count : (gpaxInput.value.currentGPAX || 0.0);
+        });
+
+        const totalCompletedCredits = computed(() => {
+          const past = Number(gpaxInput.value.pastCredits) || 0;
+          const current = currentTermTotalCredits.value || 0;
+          return past + current;
+        });
+
+        const degreeCreditsProgressPercent = computed(() => {
+          const req = Number(totalDegreeCreditsRequired.value) || 120;
+          return Math.round((totalCompletedCredits.value / req) * 100);
+        });
+
+        const isPdfSelected = computed(() => {
+          return selectedScanFile.value && (selectedScanFile.value.type === 'application/pdf' || selectedScanFile.value.name?.toLowerCase().endsWith('.pdf'));
         });
 
         const getScheduleForDay = (dayKey) => {
@@ -912,6 +2348,111 @@
         const completedTasksCount = computed(() => tasks.value.filter(t => t.completed).length);
         const realCompletionRate = computed(() => totalTasksCount.value === 0 ? 0 : Math.round((completedTasksCount.value / totalTasksCount.value) * 100));
 
+        // TODAY TASKS & DAILY STATS
+        const todayTasks = computed(() => {
+          const today = getTodayDateStr();
+          return tasks.value.filter(t => t.deadline === today || t.priority === 'HIGH');
+        });
+        const todayTasksTotalCount = computed(() => todayTasks.value.length);
+        const todayTasksCompletedCount = computed(() => todayTasks.value.filter(t => t.completed).length);
+        const todayTasksPendingCount = computed(() => todayTasksTotalCount.value - todayTasksCompletedCount.value);
+
+        // DAILY STUDY FLOWCHART ENGINE
+        const dailyFlowchartSteps = computed(() => [
+          {
+            id: 1,
+            name: 'เช็คอินเปิดวัน',
+            icon: 'fa-solid fa-sun text-amber-500',
+            done: isCheckedInToday.value,
+            active: !isCheckedInToday.value,
+            statusText: isCheckedInToday.value ? `เช็คอินแล้ว (+1 Streak)` : 'ยังไม่ได้เช็คอิน',
+            action: 'checkin',
+            actionText: 'เช็คอินทันที'
+          },
+          {
+            id: 2,
+            name: 'เข้าเรียนตามตาราง',
+            icon: 'fa-solid fa-graduation-cap text-blue-500',
+            done: todayScheduleList.value.length > 0,
+            active: todayScheduleList.value.length > 0,
+            statusText: todayScheduleList.value.length > 0 ? `${todayScheduleList.value.length} คาบวันนี้` : 'ไม่มีเรียน/พักผ่อน',
+            action: 'schedule',
+            actionText: 'ดูตารางเรียน'
+          },
+          {
+            id: 3,
+            name: 'โฟกัสทบทวน 25m',
+            icon: 'fa-solid fa-stopwatch text-rose-500',
+            done: focusSessionsCompleted.value > 0,
+            active: focusSessionsCompleted.value === 0,
+            statusText: focusSessionsCompleted.value > 0 ? `ทำไป ${focusSessionsCompleted.value} รอบ` : 'พร้อมเริ่มรอบแรก',
+            action: 'focus',
+            actionText: 'เปิดโหมดโฟกัส'
+          },
+          {
+            id: 4,
+            name: 'เคลียร์ภารกิจด่วน',
+            icon: 'fa-solid fa-list-check text-emerald-500',
+            done: todayTasksTotalCount.value === 0 || todayTasksPendingCount.value === 0,
+            active: todayTasksPendingCount.value > 0,
+            statusText: todayTasksTotalCount.value === 0 ? 'ไม่มีงานค้าง' : (todayTasksPendingCount.value === 0 ? 'เคลียร์ครบ 100%' : `เหลือ ${todayTasksPendingCount.value} งาน`),
+            action: 'tasks',
+            actionText: 'จัดการงาน'
+          },
+          {
+            id: 5,
+            name: 'สรุปภาพรวม & เซฟ',
+            icon: 'fa-solid fa-cloud text-teal-500',
+            done: saveStatus.value === 'saved' && !hasPendingChanges.value,
+            active: hasPendingChanges.value,
+            statusText: hasPendingChanges.value 
+              ? `รอเซฟอัตโนมัติใน ${secondsUntilNextSave.value}s` 
+              : (saveStatus.value === 'saving' ? 'กำลังบันทึก...' : `บันทึกแล้ว (${lastSavedTime.value}) รอบ 30 วิ`),
+            action: 'save',
+            actionText: hasPendingChanges.value ? 'เซฟทันที' : 'บันทึกซ้ำ'
+          }
+        ]);
+
+        const dailyProgressScore = computed(() => {
+          const steps = dailyFlowchartSteps.value;
+          const doneCount = steps.filter(s => s.done).length;
+          return Math.round((doneCount / steps.length) * 100);
+        });
+
+        const handleFlowchartAction = (action) => {
+          if (action === 'checkin') {
+            incrementStreak();
+          } else if (action === 'schedule') {
+            activeTab.value = 'schedule';
+          } else if (action === 'focus') {
+            isFocusMode.value = true;
+          } else if (action === 'tasks') {
+            activeTab.value = 'tasks';
+          } else if (action === 'save') {
+            forceSave();
+          }
+        };
+
+        // PREVENT DUPLICATE COURSES IN SAME SEMESTER
+        const isCourseDuplicateInSemester = (code) => {
+          if (!code) return false;
+          const clean = code.trim().toUpperCase();
+          return currentTermCourses.value.some(c => c.code.trim().toUpperCase() === clean);
+        };
+
+        // AI COURSES MANAGEMENT
+        const aiCoursesInCurrentTerm = computed(() => {
+          return currentTermCourses.value.filter(c => c.source === 'ai');
+        });
+
+        const deleteAllAiCourses = () => {
+          const count = aiCoursesInCurrentTerm.value.length;
+          if (count === 0) return;
+          if (confirm(`คุณต้องการลบรายวิชาทั้งหมดที่นำเข้าด้วย AI ในเทอม ${selectedSemester.value} (ทั้งหมด ${count} วิชา) ใช่หรือไม่?`)) {
+            semesterData.value[selectedSemester.value].courses = currentTermCourses.value.filter(c => c.source !== 'ai');
+          }
+        };
+
         // REAL AUTO NOTIFICATION ENGINE
         const generateAutoNotifications = () => {
           const list = [];
@@ -941,6 +2482,11 @@
 
         const closeUploadModal = () => {
           cancelScanning();
+          scanReviewMode.value = false;
+          scanErrorMessage.value = '';
+          isRetrying.value = false;
+          scannedCourses.value = [];
+          scannedExams.value = [];
           showUploadModal.value = false;
         };
 
@@ -948,6 +2494,8 @@
         const handleFileUpload = (event) => {
           const file = event.target.files[0];
           if (!file) return;
+          scanErrorMessage.value = '';
+          isRetrying.value = false;
           selectedScanFile.value = file;
           previewImageUrl.value = URL.createObjectURL(file);
         };
@@ -959,9 +2507,87 @@
             scanAbortController = null;
           }
           isScanning.value = false;
+          isRetrying.value = false;
           selectedScanFile.value = null;
           previewImageUrl.value = null;
           if (fileInput.value) fileInput.value.value = '';
+        };
+
+        // DEMO SCHEDULE LOADER FOR QUICK START OR OFFLINE/HIGH-DEMAND FALLBACK
+        const loadDemoSchedule = () => {
+          scanErrorMessage.value = '';
+          isScanning.value = false;
+          isRetrying.value = false;
+
+          if (selectedScanType.value === 'EXAM_SCHEDULE') {
+            scannedCourses.value = [];
+            scannedExams.value = [
+              {
+                id: 'se_' + Date.now() + '_1',
+                courseCode: '01204111',
+                title: 'สอบกลางภาค (Midterm)',
+                date: new Date(Date.now() + 86400000 * 5).toISOString().slice(0, 16),
+                room: 'LH3-201',
+                selected: true
+              },
+              {
+                id: 'se_' + Date.now() + '_2',
+                courseCode: '01204212',
+                title: 'สอบปลายภาค (Final)',
+                date: new Date(Date.now() + 86400000 * 18).toISOString().slice(0, 16),
+                room: 'LH1-102',
+                selected: true
+              }
+            ];
+          } else {
+            const c1Code = '01204111';
+            const c2Code = '01204212';
+            const c3Code = '01204222';
+            scannedCourses.value = [
+              {
+                id: 'sc_' + Date.now() + '_1',
+                code: c1Code,
+                name: 'Computer Programming',
+                instructor: 'ผศ.ดร.สมชาย ใจดี',
+                credit: 3,
+                schedule: { day: 'MON', start: '09:00', end: '12:00', room: 'LH3-201' },
+                isDuplicate: isCourseDuplicateInSemester(c1Code),
+                selected: !isCourseDuplicateInSemester(c1Code)
+              },
+              {
+                id: 'sc_' + Date.now() + '_2',
+                code: c2Code,
+                name: 'Data Structures & Algorithms',
+                instructor: 'ดร.กานดา สุวรรณ',
+                credit: 3,
+                schedule: { day: 'WED', start: '13:00', end: '16:00', room: 'LH1-102' },
+                isDuplicate: isCourseDuplicateInSemester(c2Code),
+                selected: !isCourseDuplicateInSemester(c2Code)
+              },
+              {
+                id: 'sc_' + Date.now() + '_3',
+                code: c3Code,
+                name: 'Database Systems',
+                instructor: 'อ.วิชัย พงษ์เพชร',
+                credit: 3,
+                schedule: { day: 'FRI', start: '09:00', end: '12:00', room: 'COM-LAB 4' },
+                isDuplicate: isCourseDuplicateInSemester(c3Code),
+                selected: !isCourseDuplicateInSemester(c3Code)
+              }
+            ];
+            scannedExams.value = [
+              {
+                id: 'se_' + Date.now() + '_1',
+                courseCode: c1Code,
+                title: 'สอบกลางภาค Midterm',
+                date: new Date(Date.now() + 86400000 * 6).toISOString().slice(0, 16),
+                room: 'LH3-201',
+                selected: true
+              }
+            ];
+          }
+
+          scanReviewMode.value = true;
         };
 
         // CONVERT FILE TO BASE64
@@ -972,35 +2598,112 @@
           reader.onerror = error => reject(error);
         });
 
+        // VALID IMPORT COMPUTED PROPERTIES
+        const validScannedCoursesToImport = computed(() => {
+          return scannedCourses.value.filter(c => c.selected && !c.isDuplicate);
+        });
+
+        const validScannedExamsToImport = computed(() => {
+          return scannedExams.value.filter(e => e.selected);
+        });
+
+        // CONFIRM IMPORT FROM REVIEW MODAL
+        const confirmImportScannedData = () => {
+          const coursesToAdd = validScannedCoursesToImport.value;
+          const examsToAdd = validScannedExamsToImport.value;
+
+          if (coursesToAdd.length === 0 && examsToAdd.length === 0) {
+            alert("ไม่มีรายการที่เลือกนำเข้า หรือทุกวิชามีรหัสซ้ำในระบบแล้ว");
+            return;
+          }
+
+          // Add courses marked as source: 'ai'
+          coursesToAdd.forEach(c => {
+            semesterData.value[selectedSemester.value].courses.push({
+              id: 'c_' + Date.now() + Math.random().toString(36).substr(2, 4),
+              code: c.code,
+              name: c.name,
+              instructor: c.instructor,
+              credit: c.credit,
+              schedule: {
+                day: c.schedule.day,
+                start: c.schedule.start,
+                end: c.schedule.end,
+                room: c.schedule.room
+              },
+              source: 'ai'
+            });
+          });
+
+          // Add exams
+          examsToAdd.forEach(e => {
+            const matchedCourse = currentTermCourses.value.find(c => c.code === e.courseCode);
+            semesterData.value[selectedSemester.value].exams.push({
+              id: 'e_' + Date.now() + Math.random().toString(36).substr(2, 4),
+              courseId: matchedCourse ? matchedCourse.id : (currentTermCourses.value[0]?.id || ''),
+              title: e.title,
+              date: e.date,
+              room: e.room
+            });
+          });
+
+          confetti({ particleCount: 80, spread: 60 });
+          alert(`🎉 นำเข้าข้อมูลสำเร็จ!\n- วิชาเรียน: ${coursesToAdd.length} วิชา\n- กำหนดการสอบ: ${examsToAdd.length} รายการ`);
+          closeUploadModal();
+        };
+
         // PROCESS REAL SCAN WITH GEMINI VIA SERVER-SIDE API
         const processScanWithGemini = async () => {
           if (!selectedScanFile.value) return;
 
           isScanning.value = true;
+          isRetrying.value = false;
+          scanErrorMessage.value = '';
           scanAbortController = new AbortController();
 
-          try {
+          const doFetch = async () => {
             const formData = new FormData();
             formData.append('image', selectedScanFile.value);
-
-            const response = await fetch('/api/scan-schedule', {
-              method: 'POST',
-              body: formData,
-              signal: scanAbortController.signal
-            });
-
-            if (!response.ok) {
-              const err = await response.json().catch(() => ({}));
-              throw new Error(err.error || 'เกิดข้อผิดพลาดในการเชื่อมต่อ AI Server');
+            formData.append('scanType', selectedScanType.value);
+            if (selectedGeminiModel.value !== 'auto') {
+              formData.append('preferredModel', selectedGeminiModel.value);
             }
 
-            const parsedData = await response.json();
+            return fetch('/api/scan-schedule', {
+              method: 'POST',
+              body: formData,
+              signal: scanAbortController?.signal
+            });
+          };
 
-            if (parsedData.courses && parsedData.courses.length > 0) {
+          try {
+            const response = await doFetch();
+
+            const responseText = await response.text();
+            let parsedData = null;
+            try {
+              parsedData = JSON.parse(responseText);
+            } catch (jsonErr) {
+              console.warn('Non-JSON response from server in scan-schedule:', responseText?.slice(0, 100));
+            }
+
+            if (!response.ok) {
+              const errMsg = parsedData?.error || (response.status === 429 ? 'โควต้า AI ชั่วคราวเต็ม' : 'โมเดล AI กำลังมีผู้ใช้งานหนาแน่นชั่วคราว');
+              throw new Error(errMsg);
+            }
+
+            if (!parsedData) {
+              throw new Error('ไม่สามารถอ่านข้อมูลที่ส่งกลับจากระบบได้ กรุณาลองใหม่อีกครั้ง');
+            }
+
+            const coursesList = [];
+            if (parsedData.courses && Array.isArray(parsedData.courses)) {
               parsedData.courses.forEach(c => {
-                semesterData.value[selectedSemester.value].courses.push({
-                  id: 'c_' + Date.now() + Math.random().toString(36).substr(2, 4),
-                  code: c.code || 'UNK-101',
+                const cleanCode = (c.code || 'GEN-101').trim().toUpperCase();
+                const isDup = isCourseDuplicateInSemester(cleanCode);
+                coursesList.push({
+                  id: 'sc_' + Date.now() + Math.random().toString(36).substr(2, 4),
+                  code: cleanCode,
                   name: c.name || 'รายวิชาจากการสแกน',
                   instructor: c.instructor || 'ไม่ระบุ',
                   credit: Number(c.credit) || 3,
@@ -1008,59 +2711,68 @@
                     day: c.schedule?.day || 'MON',
                     start: c.schedule?.start || '09:00',
                     end: c.schedule?.end || '12:00',
-                    room: c.schedule?.room || 'N/A'
-                  }
+                    room: c.schedule?.room || '-'
+                  },
+                  isDuplicate: isDup,
+                  selected: !isDup
                 });
               });
-              alert(`🎉 สแกนสำเร็จ! นำเข้าวิชาเรียนเรียบร้อย ${parsedData.courses.length} วิชา`);
             }
+            scannedCourses.value = coursesList;
 
-            if (parsedData.exams && parsedData.exams.length > 0) {
+            const examsList = [];
+            if (parsedData.exams && Array.isArray(parsedData.exams)) {
               parsedData.exams.forEach(e => {
-                const matchedCourse = currentTermCourses.value.find(c => c.code === e.courseCode);
-                semesterData.value[selectedSemester.value].exams.push({
-                  id: 'e_' + Date.now() + Math.random().toString(36).substr(2, 4),
-                  courseId: matchedCourse ? matchedCourse.id : (currentTermCourses.value[0]?.id || ''),
+                // Ensure date format is strictly YYYY-MM-DDTHH:mm
+                let safeDate = '';
+                try {
+                  const d = new Date(e.date || Date.now() + 86400000 * 7);
+                  if (!isNaN(d.getTime())) {
+                    const yr = d.getFullYear();
+                    const mo = String(d.getMonth() + 1).padStart(2, '0');
+                    const dy = String(d.getDate()).padStart(2, '0');
+                    const hr = String(d.getHours()).padStart(2, '0');
+                    const mi = String(d.getMinutes()).padStart(2, '0');
+                    safeDate = `${yr}-${mo}-${dy}T${hr}:${mi}`;
+                  }
+                } catch (_) {}
+                if (!safeDate) {
+                  safeDate = String(e.date || '').replace(/:[0-9]{2}(\.[0-9]+)?(Z|[+-][0-9]{2}:?[0-9]{2})?$/, '').slice(0, 16);
+                }
+
+                examsList.push({
+                  id: 'se_' + Date.now() + Math.random().toString(36).substr(2, 4),
+                  courseCode: (e.courseCode || '').trim().toUpperCase(),
                   title: e.title || 'สอบปลายภาค',
-                  date: e.date || new Date().toISOString(),
-                  room: e.room || 'N/A'
+                  date: safeDate || new Date().toISOString().slice(0, 16),
+                  room: e.room || '-',
+                  selected: true
                 });
               });
-              alert(`🎉 สแกนสำเร็จ! เพิ่มตารางสอบเรียบร้อย ${parsedData.exams.length} รายการ`);
             }
+            scannedExams.value = examsList;
 
-            confetti({ particleCount: 70 });
-            closeUploadModal();
+            if (scannedCourses.value.length === 0 && scannedExams.value.length === 0) {
+              scanErrorMessage.value = 'ไม่พบข้อมูลตารางเรียนหรือตารางสอบในภาพ กรุณาตรวจสอบว่าภาพคมชัดและตรงกับประเภทเอกสารที่เลือก';
+            } else {
+              lastScannedModel.value = parsedData.modelUsed || (selectedGeminiModel.value !== 'auto' ? selectedGeminiModel.value : 'Gemini AI');
+              scanReviewMode.value = true;
+              scanErrorMessage.value = parsedData.warning || '';
+            }
 
           } catch (error) {
             if (error.name === 'AbortError') {
               console.log('สแกนถูกยกเลิกแล้ว');
             } else {
               console.error(error);
-              alert(`⚠️ การสแกนล้มเหลว: ${error.message}`);
+              scanErrorMessage.value = error.message || 'โมเดล AI กำลังมีผู้ใช้งานหนาแน่นชั่วคราว กรุณากดลองอีกครั้ง หรือใช้ปุ่มโหลดตารางตัวอย่าง';
             }
           } finally {
             isScanning.value = false;
+            isRetrying.value = false;
             scanAbortController = null;
           }
         };
-
-        // FIREBASE SYNC INTEGRATION
-        const syncToFirebase = async () => {
-          if (user.value) {
-            try {
-              await setDoc(doc(db, "users", user.value.uid), {
-                semesterData: semesterData.value,
-                gpaxInput: gpaxInput.value,
-                streakCount: streakCount.value,
-                focusSessionsCompleted: focusSessionsCompleted.value
-              }, { merge: true });
-            } catch (e) { console.error("Firebase Sync Error:", e); }
-          }
-        };
-
-        watch(semesterData, syncToFirebase, { deep: true });
-        watch(streakCount, syncToFirebase);
 
         // OTHER HELPERS & EVENT HANDLERS
         const fullFormattedDate = computed(() => new Date().toLocaleDateString('th-TH', { weekday: 'long', year: 'numeric', month: 'long', day: 'numeric' }));
@@ -1099,22 +2811,36 @@
 
         const addCourse = () => {
           if (!newCourse.value.code) return;
-          semesterData.value[selectedSemester.value].courses.push({ id: 'c_' + Date.now(), ...newCourse.value });
+          const cleanCode = newCourse.value.code.trim().toUpperCase();
+          if (isCourseDuplicateInSemester(cleanCode)) {
+            alert(`⚠️ มีรหัสวิชา "${cleanCode}" อยู่ในเทอม ${selectedSemester.value} แล้ว ไม่สามารถเพิ่มรายวิชาซ้ำได้`);
+            return;
+          }
+          semesterData.value[selectedSemester.value].courses.push({
+            id: 'c_' + Date.now(),
+            ...newCourse.value,
+            code: cleanCode,
+            source: 'manual'
+          });
           newCourse.value = { code: '', name: '', instructor: '', credit: 3, schedule: { day: 'MON', start: '09:00', end: '12:00', room: '' } };
           showAddCourseModal.value = false;
         };
 
         const deleteCourse = (courseId) => {
-          if (confirm("คุณต้องการลบรายวิชานี้ใช่หรือไม่?")) {
+          const target = currentTermCourses.value.find(c => c.id === courseId);
+          const courseLabel = target ? `${target.code} (${target.name})` : 'รายวิชานี้';
+          if (confirm(`คุณต้องการลบ ${courseLabel} ออกจากเทอม ${selectedSemester.value} ใช่หรือไม่?`)) {
             semesterData.value[selectedSemester.value].courses = currentTermCourses.value.filter(c => c.id !== courseId);
-            selectedCourse.value = null;
+            if (selectedCourse.value && selectedCourse.value.id === courseId) {
+              selectedCourse.value = null;
+            }
           }
         };
 
         const addExam = () => {
           if (!newExam.value.title) return;
           semesterData.value[selectedSemester.value].exams.push({ id: 'e_' + Date.now(), ...newExam.value });
-          newExam.value = { courseId: '', title: '', date: '', room: '' };
+          newExam.value = { courseId: '', title: '', date: new Date().toISOString().slice(0, 16), room: '' };
           showAddExamModal.value = false;
         };
 
@@ -1142,6 +2868,7 @@
                 if (data.semesterData) semesterData.value = data.semesterData;
                 if (data.gpaxInput) gpaxInput.value = data.gpaxInput;
                 if (data.streakCount !== undefined) streakCount.value = data.streakCount;
+                if (data.lastCheckInDate !== undefined) lastCheckInDate.value = data.lastCheckInDate;
                 if (data.focusSessionsCompleted !== undefined) focusSessionsCompleted.value = data.focusSessionsCompleted;
               }
             });
@@ -1161,6 +2888,7 @@
               '2/2569': { courses: [], tasks: [], exams: [] }
             };
             streakCount.value = 0;
+            lastCheckInDate.value = null;
             focusSessionsCompleted.value = 0;
             gpaxInput.value = { currentGPAX: 0.00, pastCredits: 0, targetGPAX: 3.50 };
             localStorage.removeItem('study_os_data');
@@ -1188,6 +2916,7 @@
                   if (data.semesterData) semesterData.value = data.semesterData;
                   if (data.gpaxInput) gpaxInput.value = data.gpaxInput;
                   if (data.streakCount !== undefined) streakCount.value = data.streakCount;
+                  if (data.lastCheckInDate !== undefined) lastCheckInDate.value = data.lastCheckInDate;
                   if (data.focusSessionsCompleted !== undefined) focusSessionsCompleted.value = data.focusSessionsCompleted;
                 }
                 setTimeout(() => { isInitialSyncing = false; }, 300);
@@ -1199,22 +2928,43 @@
               setTimeout(() => { isInitialSyncing = false; }, 300);
             }
           });
+
+          // If user closes tab with pending changes, immediately trigger save
+          window.addEventListener('beforeunload', () => {
+            if (hasPendingChanges.value) {
+              executeSave();
+            }
+          });
         });
-        onUnmounted(() => clearInterval(timerInterval));
+
+        onUnmounted(() => {
+          clearInterval(timerInterval);
+          if (saveCountdownTimer) clearInterval(saveCountdownTimer);
+        });
 
         return {
-          activeTab, isDarkMode, user, streakCount, treeStage, incrementStreak, selectedSemester, showFabMenu, showQuickAddMenu,
+          activeTab, isDarkMode, user, streakCount, lastCheckInDate, isCheckedInToday, treeStage, incrementStreak, selectedSemester, showFabMenu, showQuickAddMenu,
           showAddCourseModal, showAddExamModal, showUploadModal, isScanning, selectedCourse, autoNotifications,
-          selectedScanFile, previewImageUrl, fileInput,
+          selectedScanType, selectedGeminiModel, lastScannedModel, scanReviewMode, scannedCourses, scannedExams, scanTypeLabel, removeScannedCourse, removeScannedExam,
+          validScannedCoursesToImport, validScannedExamsToImport, confirmImportScannedData,
+          selectedScanFile, previewImageUrl, fileInput, isPdfSelected, scanErrorMessage, isRetrying, loadDemoSchedule,
           fullFormattedDate, navTabs, weekDays, currentTermCourses, tasks, currentTermExams, newCourse, newExam, newTask,
           currentDayName, todayScheduleList, gpaxInput, calculatedGPAX, currentTermTotalCredits, realTargetAnalysisMessage,
           calculatedBestCaseGPAX, calculatedMidCaseGPAX, totalTasksCount, completedTasksCount, realCompletionRate,
+          todayTasks, todayTasksTotalCount, todayTasksCompletedCount, todayTasksPendingCount,
+          dailyFlowchartSteps, dailyProgressScore, handleFlowchartAction,
+          aiCoursesInCurrentTerm, deleteAllAiCourses, isCourseDuplicateInSemester,
           sortedTasks, topPriorityTasks, sortedExams, nextExam, examTimer, isFocusMode, focusTime, focusTimerDisplay,
           isFocusRunning, focusSessionsCompleted, requestNotificationPermission, toggleFocusTimer, resetFocusTimer, getScheduleForDay, getCourseCode,
           getExamStatusBadge, getPriorityBadgeClass, getDeadlineLabel, openCourseDetail, openCourseDetailByCourseId,
-          saveStatus, lastSavedTime, saveStatusTitle, forceSave,
+          saveStatus, hasPendingChanges, secondsUntilNextSave, lastSavedTime, saveStatusTitle, forceSave,
           deleteCourse, deleteExam,
-          addCourse, addExam, addTask, completeTask, deleteTask, toggleDarkMode, openUploadModal, closeUploadModal, handleFileUpload, cancelScanning, processScanWithGemini, loginWithGoogle, logout
+          addCourse, addExam, addTask, completeTask, deleteTask, toggleDarkMode, openUploadModal, closeUploadModal, handleFileUpload, cancelScanning, processScanWithGemini, loginWithGoogle, logout,
+          greetingMessage, todayFormattedShort, nextClassStatusMessage, upcomingItems,
+          scheduleViewMode, activeWeekDays, timeSlots, getCoursesForSlotAndDay, currentMonthYearDisplay, monthCalendarDays, selectedCalendarDay, getEventsForDate, scheduleListFeed,
+          taskFilters, selectedTaskFilter, filteredTasks, getTaskCountByFilter, toggleTaskComplete, onTaskProgressChange, getProgressBarVisual, getTaskStatusBadge, getDueCountdownLabel, getDueCountdownClass, getExamDaysLeftLabel,
+          courseModalTab, newCourseNote, isSummarizingNote, aiNoteSummaryResult, getCourseTasksCount, getCourseExamsCount, addNoteToSelectedCourse, deleteNoteFromSelectedCourse, summarizeNoteWithAI,
+          academicYears, totalDegreeCreditsRequired, totalCompletedCredits, degreeCreditsProgressPercent, overallCalculatedGPAX, getYearAverageGPA
         };
       }
     }).mount('#app');
